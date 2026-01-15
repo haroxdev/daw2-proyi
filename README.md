@@ -1,6 +1,6 @@
-# [GesTime]
+# GesTime (README en proceso)
 
-> [Descripción breve y concisa del proyecto. ¿Qué hace y por qué es importante?]
+> Descripción pendiente
 
 [![Estado del Build](https://img.shields.io/badge/Build-Passing-brightgreen)](#[Enlace a CI/CD, por ejemplo, GitHub Actions])
 [![Contribuidores](https://img.shields.io/badge/Contributors-3-orange)](/CONTRIBUCIÓN.md)
