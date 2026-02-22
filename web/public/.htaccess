@@ -1,0 +1,67 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+    # seguridad adicional: evitar exposición de archivos sensibles
+    <FilesMatch "\.(env|ini|phar|sh|sql|bak)$">
+        Require all denied
+    </FilesMatch>
+
+    # proteger archivos de configuración y directorios de runtime
+    <IfModule mod_authz_core.c>
+        <Files ".env">
+            Require all denied
+        </Files>
+    </IfModule>
+
+    # evitar ejecución directa en storage
+    <Directory "/storage">
+        Require all denied
+    </Directory>
+
+    # cabeceras de seguridad básicas y políticas de caché para recursos estáticos
+    ;<IfModule mod_headers.c>
+        Header always set X-Content-Type-Options "nosniff"
+        Header always set X-Frame-Options "SAMEORIGIN"
+        Header always set Referrer-Policy "no-referrer-when-downgrade"
+        Header always set X-XSS-Protection "1; mode=block"
+        Header unset Server
+    </IfModule>
+
+    # control de cache para assets (aumenta cache para archivos con hash generados por build)
+    <IfModule mod_expires.c>
+        ExpiresActive On
+        ExpiresByType text/css "access plus 1 year"
+        ExpiresByType application/javascript "access plus 1 year"
+        ExpiresByType image/svg+xml "access plus 1 year"
+        ExpiresByType image/x-icon "access plus 1 year"
+        ExpiresByType image/png "access plus 1 year"
+        ExpiresByType image/jpeg "access plus 1 year"
+        ExpiresByType application/font-woff2 "access plus 1 year"
+        ExpiresByType application/font-woff "access plus 1 year"
+        ExpiresDefault "access plus 1 month"
+    </IfModule>
+
+    # fin .htaccess
