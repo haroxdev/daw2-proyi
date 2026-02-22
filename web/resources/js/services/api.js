@@ -166,14 +166,17 @@ export const tareas = {
     eliminar: (idTarea) => 
         api.delete(`/tareas/${idTarea}`),
     
-    asignar: (idTarea, idEmpleado) => 
-        api.post(`/tareas/${idTarea}/asignar`, { id_empleado: idEmpleado }),
+    asignar: (idTarea, empleadosIds) => 
+        api.post(`/tareas/${idTarea}/asignar`, { empleados: Array.isArray(empleadosIds) ? empleadosIds : [empleadosIds].filter(Boolean) }),
     
-    imputarTiempo: (idTarea) => 
-        api.post(`/tareas/${idTarea}/imputar`),
+    imputarTiempo: (idTarea, datos = {}) => 
+        api.post(`/tareas/${idTarea}/imputar`, {
+            inicio: datos.inicio || new Date().toISOString(),
+            fin: datos.fin || null,
+        }),
     
     cerrarTimer: (idTiempo) => 
-        api.post(`/tiempos/${idTiempo}/cerrar`)
+        api.post(`/tiempos/${idTiempo}/cerrar`, { fin: new Date().toISOString() })
 };
 
 // funciones de empleados (equipo)

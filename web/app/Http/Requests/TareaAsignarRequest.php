@@ -15,6 +15,8 @@ class TareaAsignarRequest extends FormRequest
     {
         return [
             'id_empleado' => ['nullable', 'integer', 'exists:empleado,id_empleado'],
+            'empleados' => ['nullable', 'array'],
+            'empleados.*' => ['integer', 'exists:empleado,id_empleado'],
         ];
     }
 }

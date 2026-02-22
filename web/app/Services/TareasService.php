@@ -11,7 +11,19 @@ class TareasService
 {
     public function crearTarea(array $data): Tarea
     {
-        return Tarea::create($data);
+        $empleadosIds = $data['empleados'] ?? [];
+        unset($data['empleados']);
+
+        $tarea = Tarea::create($data);
+
+        // sincroniza asignación múltiple
+        if (!empty($empleadosIds)) {
+            $tarea->empleados()->sync($empleadosIds);
+        } elseif (!empty($data['id_empleado'])) {
+            $tarea->empleados()->sync([$data['id_empleado']]);
+        }
+
+        return $tarea;
     }
 
     public function actualizarTarea(Tarea $tarea, array $data): Tarea
@@ -28,10 +40,15 @@ class TareasService
         });
     }
 
-    public function asignarEmpleado(Tarea $tarea, ?Empleado $empleado): Tarea
+    // asigna uno o varios empleados a la tarea
+    public function asignarEmpleados(Tarea $tarea, array $empleadosIds): Tarea
     {
-        $tarea->id_empleado = $empleado?->id_empleado;
+        $tarea->empleados()->sync($empleadosIds);
+
+        // mantiene id_empleado legacy con el primero o null
+        $tarea->id_empleado = !empty($empleadosIds) ? $empleadosIds[0] : null;
         $tarea->save();
+
         return $tarea;
     }
 

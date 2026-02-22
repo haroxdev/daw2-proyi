@@ -16,6 +16,8 @@ class TareaCrearRequest extends FormRequest
         return [
             'id_proyecto' => ['required', 'integer', 'exists:proyecto,id_proyecto'],
             'id_empleado' => ['nullable', 'integer', 'exists:empleado,id_empleado'],
+            'empleados' => ['nullable', 'array'],
+            'empleados.*' => ['integer', 'exists:empleado,id_empleado'],
             'titulo' => ['required', 'string', 'max:100'],
             'descripcion' => ['nullable', 'string'],
             'prioridad' => ['nullable', 'in:baja,media,alta'],

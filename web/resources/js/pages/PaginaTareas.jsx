@@ -1,19 +1,48 @@
 /**
  * página de tareas (admin)
- * permite crear y gestionar tareas de proyectos
+ * permite crear, gestionar tareas e imputar/ver tiempos
  */
 import React, { useState, useEffect } from 'react';
-import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, etiquetaEstado, Paginador, usePaginacion } from '../components';
+import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, Modal, etiquetaEstado, Paginador, usePaginacion } from '../components';
 import { tareas, datosPagina } from '../services/api';
 
+// calcula horas totales de un array de tiempos
+const calcularHorasTotales = (tiempos = []) => {
+    return tiempos.reduce((acc, t) => {
+        if (!t.inicio || !t.fin) return acc;
+        const diff = (new Date(t.fin) - new Date(t.inicio)) / 3600000;
+        return acc + diff;
+    }, 0);
+};
+
+// formatea horas decimales a "Xh Ym"
+const formatearDuracion = (horas) => {
+    if (!horas || horas <= 0) return '0h';
+    const h = Math.floor(horas);
+    const m = Math.round((horas - h) * 60);
+    if (h === 0) return `${m}min`;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}min`;
+};
+
+// formatea fecha iso
+const formatearFecha = (iso) => {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('es-ES');
+};
+
+const formatearHora = (iso) => {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+};
+
 export default function PaginaTareas() {
-    // estado local
     const [listaTareas, setListaTareas] = useState([]);
     const [proyectos, setProyectos] = useState([]);
     const [empleados, setEmpleados] = useState([]);
     const [formulario, setFormulario] = useState({
         id_proyecto: '',
-        id_empleado: '',
+        empleados: [],
         titulo: '',
         descripcion: '',
         prioridad: '',
@@ -22,10 +51,22 @@ export default function PaginaTareas() {
     const [cargando, setCargando] = useState(false);
     const [mensaje, setMensaje] = useState(null);
 
+    // modal de tiempos
+    const [modalTiempos, setModalTiempos] = useState(false);
+    const [tareaActiva, setTareaActiva] = useState(null);
+
+    // modal imputar
+    const [modalImputar, setModalImputar] = useState(false);
+    const [formImputar, setFormImputar] = useState({ fecha: '', horas: '1', minutos: '0' });
+
+    // modal de asignación múltiple
+    const [modalAsignar, setModalAsignar] = useState(false);
+    const [tareaAsignar, setTareaAsignar] = useState(null);
+    const [empleadosSeleccionados, setEmpleadosSeleccionados] = useState([]);
+
     // paginación
     const { itemsPaginados: tareasPaginadas, paginaActual, totalPaginas, setPaginaActual } = usePaginacion(listaTareas, 5);
 
-    // carga datos desde API
     const cargarDatos = async () => {
         try {
             const res = await datosPagina.tareas();
@@ -37,18 +78,24 @@ export default function PaginaTareas() {
         }
     };
 
-    // cargar datos iniciales
-    useEffect(() => {
-        cargarDatos();
-    }, []);
+    useEffect(() => { cargarDatos(); }, []);
 
-    // maneja cambios en el formulario
     const manejarCambio = (e) => {
-        const { name, value } = e.target;
+        const { name, value, checked } = e.target;
+
+        if (name === 'empleados') {
+            const id = parseInt(value);
+            setFormulario(prev => ({
+                ...prev,
+                empleados: checked
+                    ? [...prev.empleados, id]
+                    : prev.empleados.filter(eId => eId !== id)
+            }));
+            return;
+        }
         setFormulario(prev => ({ ...prev, [name]: value }));
     };
 
-    // crea una nueva tarea
     const manejarCrear = async (e) => {
         e.preventDefault();
         setCargando(true);
@@ -56,7 +103,7 @@ export default function PaginaTareas() {
         try {
             await tareas.crear(formulario);
             setMensaje({ tipo: 'exito', texto: 'Tarea creada correctamente' });
-            setFormulario({ id_proyecto: '', id_empleado: '', titulo: '', descripcion: '', prioridad: '', estado: '' });
+            setFormulario({ id_proyecto: '', empleados: [], titulo: '', descripcion: '', prioridad: '', estado: '' });
             await cargarDatos();
         } catch (error) {
             setMensaje({ tipo: 'error', texto: error.response?.data?.message || 'Error al crear tarea' });
@@ -65,17 +112,110 @@ export default function PaginaTareas() {
         }
     };
 
-    // asigna tarea a empleado
-    const manejarAsignar = async (idTarea, idEmpleado) => {
+    // abre modal de asignación múltiple
+    const abrirAsignar = (tarea) => {
+        setTareaAsignar(tarea);
+        setEmpleadosSeleccionados(tarea.empleados?.map(e => e.id_empleado) || []);
+        setModalAsignar(true);
+    };
+
+    // guarda asignación múltiple
+    const guardarAsignacion = async () => {
+        if (!tareaAsignar) return;
         setCargando(true);
         try {
-            await tareas.asignar(idTarea, idEmpleado || null);
+            await tareas.asignar(tareaAsignar.id_tarea, empleadosSeleccionados);
+            setMensaje({ tipo: 'exito', texto: 'Asignación actualizada' });
+            setModalAsignar(false);
             await cargarDatos();
         } catch (error) {
             setMensaje({ tipo: 'error', texto: 'Error al asignar tarea' });
         } finally {
             setCargando(false);
         }
+    };
+
+    // inicia un timer en la tarea
+    const iniciarTimer = async (idTarea) => {
+        setCargando(true);
+        setMensaje(null);
+        try {
+            await tareas.imputarTiempo(idTarea, {
+                inicio: new Date().toISOString(),
+                fin: null,
+            });
+            setMensaje({ tipo: 'exito', texto: 'Timer iniciado' });
+            await cargarDatos();
+        } catch (error) {
+            setMensaje({ tipo: 'error', texto: error.response?.data?.message || 'Error al iniciar timer' });
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    // detiene un timer abierto
+    const pararTimer = async (idTiempo) => {
+        setCargando(true);
+        setMensaje(null);
+        try {
+            await tareas.cerrarTimer(idTiempo);
+            setMensaje({ tipo: 'exito', texto: 'Timer detenido' });
+            await cargarDatos();
+        } catch (error) {
+            setMensaje({ tipo: 'error', texto: error.response?.data?.message || 'Error al parar timer' });
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    // abre el modal de tiempos de una tarea
+    const verTiempos = (tarea) => {
+        setTareaActiva(tarea);
+        setModalTiempos(true);
+    };
+
+    // abre modal de imputar horas manualmente
+    const abrirImputar = (tarea) => {
+        setTareaActiva(tarea);
+        setFormImputar({ fecha: new Date().toISOString().split('T')[0], horas: '1', minutos: '0' });
+        setModalImputar(true);
+    };
+
+    // imputar horas manualmente
+    const manejarImputar = async (e) => {
+        e.preventDefault();
+        if (!tareaActiva) return;
+
+        const totalMinutos = (parseInt(formImputar.horas || 0) * 60) + parseInt(formImputar.minutos || 0);
+        if (totalMinutos <= 0) {
+            setMensaje({ tipo: 'error', texto: 'Las horas deben ser mayores a 0' });
+            return;
+        }
+
+        setCargando(true);
+        setMensaje(null);
+        try {
+            const inicio = new Date(`${formImputar.fecha}T09:00:00`);
+            const fin = new Date(inicio.getTime() + totalMinutos * 60000);
+
+            await tareas.imputarTiempo(tareaActiva.id_tarea, {
+                inicio: inicio.toISOString(),
+                fin: fin.toISOString(),
+            });
+
+            setMensaje({ tipo: 'exito', texto: 'Horas imputadas correctamente' });
+            setModalImputar(false);
+            await cargarDatos();
+        } catch (error) {
+            setMensaje({ tipo: 'error', texto: error.response?.data?.message || 'Error al imputar' });
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    // detecta si la tarea tiene un timer abierto (sin fin)
+    const timerAbierto = (tarea) => {
+        return tarea.tiempos?.find(t => t.inicio && !t.fin);
     };
 
     // opciones para selects
@@ -105,10 +245,10 @@ export default function PaginaTareas() {
     return (
         <div className="space-y-6">
             {mensaje && (
-                <Alerta 
-                    tipo={mensaje.tipo} 
-                    mensaje={mensaje.texto} 
-                    onCerrar={() => setMensaje(null)} 
+                <Alerta
+                    tipo={mensaje.tipo}
+                    mensaje={mensaje.texto}
+                    onCerrar={() => setMensaje(null)}
                 />
             )}
 
@@ -125,14 +265,27 @@ export default function PaginaTareas() {
                             opciones={opcionesProyecto}
                             requerido
                         />
-                        <CampoFormulario
-                            etiqueta="Asignar a"
-                            tipo="select"
-                            nombre="id_empleado"
-                            valor={formulario.id_empleado}
-                            onChange={manejarCambio}
-                            opciones={opcionesEmpleado}
-                        />
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Asignar a</label>
+                            <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 space-y-1">
+                                {empleados.map(emp => (
+                                    <label key={emp.id_empleado} className="flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-1 rounded">
+                                        <input
+                                            type="checkbox"
+                                            name="empleados"
+                                            value={emp.id_empleado}
+                                            checked={formulario.empleados.includes(emp.id_empleado)}
+                                            onChange={manejarCambio}
+                                            className="w-4 h-4 rounded border-gray-300 text-blue-600"
+                                        />
+                                        {emp.nombre}
+                                    </label>
+                                ))}
+                                {empleados.length === 0 && (
+                                    <p className="text-xs text-gray-400">Sin empleados</p>
+                                )}
+                            </div>
+                        </div>
                         <CampoFormulario
                             etiqueta="Título"
                             tipo="text"
@@ -188,42 +341,92 @@ export default function PaginaTareas() {
                             </EncabezadoTabla>
                             <CuerpoTabla>
                                 {tareasPaginadas.length > 0 ? (
-                                    tareasPaginadas.map((tarea) => (
-                                        <FilaTabla key={tarea.id_tarea}>
-                                            <CeldaTabla>{tarea.titulo}</CeldaTabla>
-                                            <CeldaTabla>{tarea.proyecto?.nombre || '—'}</CeldaTabla>
-                                            <CeldaTabla>{tarea.empleado?.nombre || 'Sin asignar'}</CeldaTabla>
-                                            <CeldaTabla>{etiquetaEstado(tarea.prioridad)}</CeldaTabla>
-                                            <CeldaTabla>{etiquetaEstado(tarea.estado || 'pendiente')}</CeldaTabla>
-                                            <CeldaTabla>{tarea.tiempos?.length || 0} registros</CeldaTabla>
-                                            <CeldaTabla>
-                                                <div className="flex flex-col gap-1">
-                                                    <Boton
-                                                        tamano="pequeno"
-                                                        variante="contorno"
-                                                        onClick={() => manejarAsignar(tarea.id_tarea, '')}
-                                                        deshabilitado={cargando}
-                                                    >
-                                                        Desasignar
-                                                    </Boton>
-                                                    <div className="flex gap-1">
-                                                        <select 
-                                                            className="flex-1 px-2 py-1 text-xs rounded bg-slate-800 border border-slate-700 text-white"
-                                                            onChange={(e) => manejarAsignar(tarea.id_tarea, e.target.value)}
-                                                            defaultValue=""
-                                                        >
-                                                            <option value="" disabled>Asignar</option>
-                                                            {empleados.map(emp => (
-                                                                <option key={emp.id_empleado} value={emp.id_empleado}>
-                                                                    {emp.nombre}
-                                                                </option>
+                                    tareasPaginadas.map((tarea) => {
+                                        const timer = timerAbierto(tarea);
+                                        const horasTotal = calcularHorasTotales(tarea.tiempos);
+
+                                        return (
+                                            <FilaTabla key={tarea.id_tarea}>
+                                                <CeldaTabla>
+                                                    <span className="font-medium">{tarea.titulo}</span>
+                                                </CeldaTabla>
+                                                <CeldaTabla>{tarea.proyecto?.nombre || '—'}</CeldaTabla>
+                                                <CeldaTabla>
+                                                    {tarea.empleados?.length > 0
+                                                        ? <div className="flex flex-wrap gap-1">
+                                                            {tarea.empleados.map(e => (
+                                                                <span key={e.id_empleado} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
+                                                                    {e.nombre}
+                                                                </span>
                                                             ))}
-                                                        </select>
+                                                          </div>
+                                                        : <span className="text-gray-400">Sin asignar</span>
+                                                    }
+                                                </CeldaTabla>
+                                                <CeldaTabla>{etiquetaEstado(tarea.prioridad)}</CeldaTabla>
+                                                <CeldaTabla>{etiquetaEstado(tarea.estado || 'pendiente')}</CeldaTabla>
+                                                <CeldaTabla>
+                                                    <div className="flex flex-col items-start gap-0.5">
+                                                        <span className="text-sm font-medium">{formatearDuracion(horasTotal)}</span>
+                                                        {timer && (
+                                                            <span className="text-xs text-green-600 font-medium animate-pulse">
+                                                                ● En curso
+                                                            </span>
+                                                        )}
+                                                        {(tarea.tiempos?.length || 0) > 0 && (
+                                                            <button
+                                                                className="text-xs text-blue-600 hover:underline"
+                                                                onClick={() => verTiempos(tarea)}
+                                                            >
+                                                                Ver {tarea.tiempos.length} registro{tarea.tiempos.length !== 1 ? 's' : ''}
+                                                            </button>
+                                                        )}
                                                     </div>
-                                                </div>
-                                            </CeldaTabla>
-                                        </FilaTabla>
-                                    ))
+                                                </CeldaTabla>
+                                                <CeldaTabla>
+                                                    <div className="flex flex-col gap-1">
+                                                        {/* botones de timer */}
+                                                        {timer ? (
+                                                            <Boton
+                                                                tamano="pequeno"
+                                                                variante="contornoPrimario"
+                                                                onClick={() => pararTimer(timer.id_tiempo)}
+                                                                deshabilitado={cargando}
+                                                            >
+                                                                ⏹ Parar
+                                                            </Boton>
+                                                        ) : (
+                                                            <Boton
+                                                                tamano="pequeno"
+                                                                variante="contornoPrimario"
+                                                                onClick={() => iniciarTimer(tarea.id_tarea)}
+                                                                deshabilitado={cargando}
+                                                            >
+                                                                ▶ Iniciar
+                                                            </Boton>
+                                                        )}
+                                                        <Boton
+                                                            tamano="pequeno"
+                                                            variante="contorno"
+                                                            onClick={() => abrirImputar(tarea)}
+                                                            deshabilitado={cargando}
+                                                        >
+                                                            + Imputar
+                                                        </Boton>
+                                                        {/* asignación */}
+                                                        <Boton
+                                                            tamano="pequeno"
+                                                            variante="contorno"
+                                                            onClick={() => abrirAsignar(tarea)}
+                                                            deshabilitado={cargando}
+                                                        >
+                                                            Asignar
+                                                        </Boton>
+                                                    </div>
+                                                </CeldaTabla>
+                                            </FilaTabla>
+                                        );
+                                    })
                                 ) : (
                                     <TablaVacia mensaje="Sin tareas aún." columnas={7} />
                                 )}
@@ -237,6 +440,166 @@ export default function PaginaTareas() {
                     </Tarjeta>
                 </div>
             </div>
+
+            {/* modal de tiempos registrados */}
+            <Modal
+                abierto={modalTiempos}
+                onCerrar={() => setModalTiempos(false)}
+                titulo={`Tiempos: ${tareaActiva?.titulo || ''}`}
+                anchura="grande"
+            >
+                {tareaActiva && (
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">
+                                Proyecto: {tareaActiva.proyecto?.nombre || '—'}
+                            </span>
+                            <span className="font-bold text-gray-900">
+                                Total: {formatearDuracion(calcularHorasTotales(tareaActiva.tiempos))}
+                            </span>
+                        </div>
+
+                        {tareaActiva.tiempos?.length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b border-gray-200 text-left">
+                                            <th className="pb-2 font-medium text-gray-600">Fecha</th>
+                                            <th className="pb-2 font-medium text-gray-600">Inicio</th>
+                                            <th className="pb-2 font-medium text-gray-600">Fin</th>
+                                            <th className="pb-2 font-medium text-gray-600 text-right">Duración</th>
+                                            <th className="pb-2 font-medium text-gray-600">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {tareaActiva.tiempos.map((t) => {
+                                            const abierto = t.inicio && !t.fin;
+                                            const horas = abierto ? 0 : (new Date(t.fin) - new Date(t.inicio)) / 3600000;
+
+                                            return (
+                                                <tr key={t.id_tiempo}>
+                                                    <td className="py-2 text-gray-500">{formatearFecha(t.inicio)}</td>
+                                                    <td className="py-2 text-gray-500">{formatearHora(t.inicio)}</td>
+                                                    <td className="py-2 text-gray-500">
+                                                        {abierto ? (
+                                                            <span className="text-green-600 font-medium animate-pulse">● En curso</span>
+                                                        ) : formatearHora(t.fin)}
+                                                    </td>
+                                                    <td className="py-2 text-right font-medium text-gray-900">
+                                                        {abierto ? '—' : formatearDuracion(horas)}
+                                                    </td>
+                                                    <td className="py-2">
+                                                        {abierto && (
+                                                            <Boton
+                                                                tamano="pequeno"
+                                                                variante="contornoPrimario"
+                                                                onClick={() => { pararTimer(t.id_tiempo); setModalTiempos(false); }}
+                                                                deshabilitado={cargando}
+                                                            >
+                                                                Parar
+                                                            </Boton>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <p className="text-gray-500 text-sm text-center py-4">Sin registros de tiempo.</p>
+                        )}
+                    </div>
+                )}
+            </Modal>
+
+            {/* modal imputar horas manualmente */}
+            <Modal
+                abierto={modalImputar}
+                onCerrar={() => setModalImputar(false)}
+                titulo={`Imputar horas: ${tareaActiva?.titulo || ''}`}
+            >
+                <form onSubmit={manejarImputar} className="space-y-4">
+                    <CampoFormulario
+                        etiqueta="Fecha"
+                        tipo="date"
+                        nombre="fecha"
+                        valor={formImputar.fecha}
+                        onChange={(e) => setFormImputar(prev => ({ ...prev, fecha: e.target.value }))}
+                        requerido
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <CampoFormulario
+                            etiqueta="Horas"
+                            tipo="number"
+                            nombre="horas"
+                            valor={formImputar.horas}
+                            onChange={(e) => setFormImputar(prev => ({ ...prev, horas: e.target.value }))}
+                            placeholder="0"
+                        />
+                        <CampoFormulario
+                            etiqueta="Minutos"
+                            tipo="number"
+                            nombre="minutos"
+                            valor={formImputar.minutos}
+                            onChange={(e) => setFormImputar(prev => ({ ...prev, minutos: e.target.value }))}
+                            placeholder="0"
+                        />
+                    </div>
+                    <p className="text-xs text-gray-500">
+                        Se registrará {parseInt(formImputar.horas || 0)}h {parseInt(formImputar.minutos || 0)}min
+                    </p>
+                    <Boton tipo="submit" cargando={cargando} className="w-full">
+                        Imputar
+                    </Boton>
+                </form>
+            </Modal>
+
+            {/* modal asignación múltiple */}
+            <Modal
+                abierto={modalAsignar}
+                onCerrar={() => setModalAsignar(false)}
+                titulo={`Asignar: ${tareaAsignar?.titulo || ''}`}
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-gray-500">
+                        Selecciona los empleados que trabajarán en esta tarea.
+                    </p>
+                    <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1">
+                        {empleados.map(emp => (
+                            <label
+                                key={emp.id_empleado}
+                                className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={empleadosSeleccionados.includes(emp.id_empleado)}
+                                    onChange={(e) => {
+                                        setEmpleadosSeleccionados(prev =>
+                                            e.target.checked
+                                                ? [...prev, emp.id_empleado]
+                                                : prev.filter(id => id !== emp.id_empleado)
+                                        );
+                                    }}
+                                    className="w-4 h-4 rounded border-gray-300 text-blue-600"
+                                />
+                                <span className="text-sm text-gray-700">{emp.nombre}</span>
+                            </label>
+                        ))}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                        {empleadosSeleccionados.length} empleado{empleadosSeleccionados.length !== 1 ? 's' : ''} seleccionado{empleadosSeleccionados.length !== 1 ? 's' : ''}
+                    </div>
+                    <div className="flex justify-end gap-3">
+                        <Boton variante="contorno" onClick={() => setModalAsignar(false)}>
+                            Cancelar
+                        </Boton>
+                        <Boton onClick={guardarAsignacion} cargando={cargando}>
+                            Guardar
+                        </Boton>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

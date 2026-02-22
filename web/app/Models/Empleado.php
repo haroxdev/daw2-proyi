@@ -69,9 +69,16 @@ class Empleado extends Authenticatable
         return $this->hasMany(EventoCalendario::class, 'id_empleado', 'id_empleado');
     }
 
-    public function tareas(): HasMany
+    // relación legacy simple (campo id_empleado en tarea)
+    public function tareasDirectas(): HasMany
     {
         return $this->hasMany(Tarea::class, 'id_empleado', 'id_empleado');
+    }
+
+    // relación many-to-many para multi-asignación
+    public function tareas(): BelongsToMany
+    {
+        return $this->belongsToMany(Tarea::class, 'tarea_empleado', 'id_empleado', 'id_tarea');
     }
 
     public function tiemposTarea(): HasMany

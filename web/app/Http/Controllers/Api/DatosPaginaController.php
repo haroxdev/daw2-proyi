@@ -191,10 +191,43 @@ class DatosPaginaController extends Controller
 
         $timesheets = $empleado?->timesheets()
             ->latest('inicio_periodo')
+            ->get()
+            ->map(function ($ts) {
+                $lineas = $ts->lineas()->map(function ($t) {
+                    $horas = ($t->inicio && $t->fin)
+                        ? round($t->inicio->diffInMinutes($t->fin) / 60, 2)
+                        : 0;
+                    return [
+                        'id_tiempo' => $t->id_tiempo,
+                        'tarea' => $t->tarea?->titulo ?? 'Sin tarea',
+                        'proyecto' => $t->tarea?->proyecto?->nombre ?? '—',
+                        'inicio' => $t->inicio?->toIso8601String(),
+                        'fin' => $t->fin?->toIso8601String(),
+                        'horas' => $horas,
+                        'abierto' => $t->fin === null,
+                    ];
+                });
+
+                return [
+                    'id_timesheet' => $ts->id_timesheet,
+                    'inicio_periodo' => $ts->inicio_periodo,
+                    'fin_periodo' => $ts->fin_periodo,
+                    'estado' => $ts->estado,
+                    'comentario' => $ts->comentario,
+                    'total_horas' => $ts->totalHoras(),
+                    'lineas' => $lineas,
+                ];
+            }) ?? [];
+
+        // tareas asignadas al empleado para imputar desde timesheets
+        $tareasAsignadas = $empleado?->tareas()
+            ->with('proyecto')
+            ->whereIn('estado', ['pendiente', 'en_proceso', null, ''])
             ->get() ?? [];
 
         return response()->json([
             'timesheets' => $timesheets,
+            'tareas' => $tareasAsignadas,
         ]);
     }
 
@@ -277,7 +310,7 @@ class DatosPaginaController extends Controller
     // datos de tareas (admin)
     public function tareas(): JsonResponse
     {
-        $tareas = Tarea::with(['proyecto', 'empleado', 'tiempos'])->get();
+        $tareas = Tarea::with(['proyecto', 'empleados', 'tiempos'])->get();
         $proyectos = Proyecto::orderBy('nombre')->get();
         $empleados = Empleado::orderBy('nombre')->get();
 

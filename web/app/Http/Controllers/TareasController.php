@@ -56,17 +56,23 @@ class TareasController extends Controller
 
     public function asignar(TareaAsignarRequest $request, Tarea $tarea)
     {
-        $empleadoId = $request->validated('id_empleado');
-        $empleado = $empleadoId ? Empleado::findOrFail($empleadoId) : null;
+        // soporta multi-asignación (array) o asignación simple (id_empleado)
+        $empleadosIds = $request->validated('empleados')
+            ?? ($request->validated('id_empleado') ? [$request->validated('id_empleado')] : []);
 
-        $tarea = $this->service->asignarEmpleado($tarea, $empleado);
+        $tarea = $this->service->asignarEmpleados($tarea, $empleadosIds);
         $this->auditoria->registrar($request->user(), 'tarea_asignada', 'tarea', $tarea->id_tarea);
-        if ($empleado) {
-            $this->notificaciones->enviar($empleado, 'Tienes una tarea: '.$tarea->titulo, 'tarea');
+
+        // notifica a cada empleado asignado
+        foreach ($empleadosIds as $empId) {
+            $emp = Empleado::find($empId);
+            if ($emp) {
+                $this->notificaciones->enviar($emp, 'Tienes una tarea: '.$tarea->titulo, 'tarea');
+            }
         }
 
         if ($request->expectsJson()) {
-            return response()->json($tarea);
+            return response()->json($tarea->load('empleados'));
         }
 
         return back()->with('success', 'Asignacion actualizada');
