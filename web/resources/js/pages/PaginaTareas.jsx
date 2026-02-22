@@ -64,6 +64,11 @@ export default function PaginaTareas() {
     const [tareaAsignar, setTareaAsignar] = useState(null);
     const [empleadosSeleccionados, setEmpleadosSeleccionados] = useState([]);
 
+    // modal de edición
+    const [modalEditar, setModalEditar] = useState(false);
+    const [tareaEditando, setTareaEditando] = useState(null);
+    const [formEditar, setFormEditar] = useState({});
+
     // paginación
     const { itemsPaginados: tareasPaginadas, paginaActual, totalPaginas, setPaginaActual } = usePaginacion(listaTareas, 5);
 
@@ -130,6 +135,62 @@ export default function PaginaTareas() {
             await cargarDatos();
         } catch (error) {
             setMensaje({ tipo: 'error', texto: 'Error al asignar tarea' });
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    // abre modal de edición con datos de la tarea
+    const abrirEditar = (tarea) => {
+        setTareaEditando(tarea);
+        setFormEditar({
+            id_proyecto: tarea.id_proyecto || '',
+            titulo: tarea.titulo || '',
+            descripcion: tarea.descripcion || '',
+            prioridad: tarea.prioridad || '',
+            estado: tarea.estado || '',
+        });
+        setModalEditar(true);
+    };
+
+    // maneja cambios en el formulario de edición
+    const manejarCambioEditar = (e) => {
+        const { name, value } = e.target;
+        setFormEditar(prev => ({ ...prev, [name]: value }));
+    };
+
+    // guarda cambios de la tarea editada
+    const manejarGuardarEdicion = async (e) => {
+        e.preventDefault();
+        if (!tareaEditando) return;
+
+        setCargando(true);
+        setMensaje(null);
+        try {
+            await tareas.actualizar(tareaEditando.id_tarea, formEditar);
+            setMensaje({ tipo: 'exito', texto: 'Tarea actualizada correctamente' });
+            setModalEditar(false);
+            setTareaEditando(null);
+            await cargarDatos();
+        } catch (error) {
+            setMensaje({ tipo: 'error', texto: error.response?.data?.message || 'Error al actualizar tarea' });
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    // elimina una tarea
+    const manejarEliminar = async (idTarea) => {
+        if (!confirm('¿Eliminar esta tarea? Se borrarán también sus registros de tiempo.')) return;
+
+        setCargando(true);
+        setMensaje(null);
+        try {
+            await tareas.eliminar(idTarea);
+            setMensaje({ tipo: 'exito', texto: 'Tarea eliminada' });
+            await cargarDatos();
+        } catch (error) {
+            setMensaje({ tipo: 'error', texto: error.response?.data?.message || 'Error al eliminar' });
         } finally {
             setCargando(false);
         }
@@ -422,6 +483,23 @@ export default function PaginaTareas() {
                                                         >
                                                             Asignar
                                                         </Boton>
+                                                        {/* edición */}
+                                                        <Boton
+                                                            tamano="pequeno"
+                                                            variante="contornoPrimario"
+                                                            onClick={() => abrirEditar(tarea)}
+                                                            deshabilitado={cargando}
+                                                        >
+                                                            Editar
+                                                        </Boton>
+                                                        <Boton
+                                                            tamano="pequeno"
+                                                            variante="contorno"
+                                                            onClick={() => manejarEliminar(tarea.id_tarea)}
+                                                            deshabilitado={cargando}
+                                                        >
+                                                            Eliminar
+                                                        </Boton>
                                                     </div>
                                                 </CeldaTabla>
                                             </FilaTabla>
@@ -599,6 +677,73 @@ export default function PaginaTareas() {
                         </Boton>
                     </div>
                 </div>
+            </Modal>
+
+            {/* modal de edición de tarea */}
+            <Modal
+                abierto={modalEditar}
+                onCerrar={() => { setModalEditar(false); setTareaEditando(null); }}
+                titulo={`Editar: ${tareaEditando?.titulo || ''}`}
+                anchura="grande"
+            >
+                {tareaEditando && (
+                    <form onSubmit={manejarGuardarEdicion} className="space-y-4">
+                        <CampoFormulario
+                            etiqueta="Título"
+                            tipo="text"
+                            nombre="titulo"
+                            valor={formEditar.titulo}
+                            onChange={manejarCambioEditar}
+                            requerido
+                        />
+                        <CampoFormulario
+                            etiqueta="Descripción"
+                            tipo="textarea"
+                            nombre="descripcion"
+                            valor={formEditar.descripcion}
+                            onChange={manejarCambioEditar}
+                            filas={3}
+                        />
+                        <CampoFormulario
+                            etiqueta="Proyecto"
+                            tipo="select"
+                            nombre="id_proyecto"
+                            valor={formEditar.id_proyecto}
+                            onChange={manejarCambioEditar}
+                            opciones={opcionesProyecto}
+                            requerido
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                            <CampoFormulario
+                                etiqueta="Prioridad"
+                                tipo="select"
+                                nombre="prioridad"
+                                valor={formEditar.prioridad}
+                                onChange={manejarCambioEditar}
+                                opciones={opcionesPrioridad}
+                            />
+                            <CampoFormulario
+                                etiqueta="Estado"
+                                tipo="select"
+                                nombre="estado"
+                                valor={formEditar.estado}
+                                onChange={manejarCambioEditar}
+                                opciones={opcionesEstado}
+                            />
+                        </div>
+                        <div className="flex justify-end gap-3 pt-2">
+                            <Boton
+                                variante="contorno"
+                                onClick={() => { setModalEditar(false); setTareaEditando(null); }}
+                            >
+                                Cancelar
+                            </Boton>
+                            <Boton tipo="submit" cargando={cargando}>
+                                Guardar cambios
+                            </Boton>
+                        </div>
+                    </form>
+                )}
             </Modal>
         </div>
     );
