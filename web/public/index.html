@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GesTime - Plataforma de Gestión de Tiempo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <!-- Pantalla de Login con botón de tema -->
+    <div id="loginScreen" class="login-container">
+        <!-- Botón de cambio de tema en login -->
+        <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+            <i class="ri-moon-line" id="themeIconLogin"></i>
+        </button>
+        
+        <div class="login-box">
+            <div class="login-logo">
+                <i class="ri-time-line"></i>
+                <span>GesTime</span>
+            </div>
+            
+            <h1 class="login-title">Bienvenido de nuevo</h1>
+            <p class="login-subtitle">Inicia sesión para continuar</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" placeholder="tu@email.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" class="form-input" placeholder="••••••••" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-login-box-line"></i>
+                    Iniciar Sesión
+                </button>
+            </form>
+            
+            <div class="login-links">
+                <a href="#" class="login-link">¿Olvidaste tu contraseña?</a>
+                <a href="#" class="login-link">Crear cuenta</a>
+            </div>
+            
+            <div class="login-divider">Acceso rápido</div>
+            
+            <div class="demo-accounts">
+                <div class="demo-accounts-title">Cuentas de demostración:</div>
+                
+                <div class="demo-account" onclick="loginAs('admin')">
+                    <div class="demo-account-info">
+                        <div class="demo-account-avatar admin">AM</div>
+                        <div>
+                            <div class="demo-account-name">Adrián Martínez</div>
+                            <div class="demo-account-role">Administrador</div>
+                        </div>
+                    </div>
+                    <i class="ri-arrow-right-line"></i>
+                </div>
+                
+                <div class="demo-account" onclick="loginAs('manager')">
+                    <div class="demo-account-info">
+                        <div class="demo-account-avatar manager">AT</div>
+                        <div>
+                            <div class="demo-account-name">Adrián Terán</div>
+                            <div class="demo-account-role">Responsable</div>
+                        </div>
+                    </div>
+                    <i class="ri-arrow-right-line"></i>
+                </div>
+                
+                <div class="demo-account" onclick="loginAs('employee')">
+                    <div class="demo-account-info">
+                        <div class="demo-account-avatar employee">PA</div>
+                        <div>
+                            <div class="demo-account-name">Pablo Acero</div>
+                            <div class="demo-account-role">Empleado</div>
+                        </div>
+                    </div>
+                    <i class="ri-arrow-right-line"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div id="appContainer" class="app-container">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="ri-time-line"></i>
+                    <span>GesTime</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Principal</div>
+                    <div class="nav-item active" onclick="showPage('dashboard')">
+                        <i class="ri-dashboard-3-line"></i>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('fichaje')">
+                        <i class="ri-fingerprint-line"></i>
+                        <span>Fichaje</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('timesheet')">
+                        <i class="ri-time-line"></i>
+                        <span>Timesheet</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('chat')">
+                        <i class="ri-chat"></i>
+                        <span>Chat</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Gestión</div>
+                    <div class="nav-item" onclick="showPage('proyectos')">
+                        <i class="ri-folder-line"></i>
+                        <span>Proyectos</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('ausencias')">
+                        <i class="ri-calendar-event-line"></i>
+                        <span>Ausencias</span>
+                        <span class="nav-badge" id="pendingAbsences">2</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('calendario')">
+                        <i class="ri-calendar-line"></i>
+                        <span>Calendario</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section admin-section" id="adminSection">
+                    <div class="nav-section-title">Administración</div>
+                    <div class="nav-item" onclick="showPage('usuarios')">
+                        <i class="ri-team-line"></i>
+                        <span>Usuarios</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('aprobaciones')">
+                        <i class="ri-checkbox-circle-line"></i>
+                        <span>Aprobaciones</span>
+                        <span class="nav-badge" id="pendingApprovals">3</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('informes')">
+                        <i class="ri-bar-chart-box-line"></i>
+                        <span>Informes</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('auditoria')">
+                        <i class="ri-shield-check-line"></i>
+                        <span>Auditoría</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Configuración</div>
+                    <div class="nav-item" onclick="showPage('perfil')">
+                        <i class="ri-user-settings-line"></i>
+                        <span>Mi Perfil</span>
+                    </div>
+                    <div class="nav-item admin-only" onclick="showPage('configuracion')">
+                        <i class="ri-settings-3-line"></i>
+                        <span>Configuración</span>
+                    </div>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-card" onclick="logout()">
+                    <div class="user-avatar" id="userAvatarSidebar">AM</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userNameSidebar">Ana Martínez</div>
+                        <div class="user-role" id="userRoleSidebar">Administradora</div>
+                    </div>
+                    <i class="ri-logout-box-r-line"></i>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button id="menuBtn" class="btn btn-icon btn-secondary" onclick="toggleSidebar()" style="display: none;">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h1 id="pageTitle" class="header-title">Dashboard</h1>
+                </div>
+                
+                <div class="header-right">
+                    <div class="search-box">
+                        <i class="ri-search-line"></i>
+                        <input type="text" placeholder="Buscar...">
+                    </div>
+                    
+                    <!-- Botón de cambio de tema en header -->
+                    <button class="notification-btn" onclick="toggleTheme()" title="Cambiar tema">
+                        <i class="ri-moon-line" id="themeIconApp"></i>
+                    </button>
+                    
+                    <button class="notification-btn" onclick="toggleNotifications()">
+                        <i class="ri-notification-3-line"></i>
+                        <span class="notification-badge"></span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Page -->
+            <div class="page-content" id="page-dashboard">
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon red">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <div class="stat-card-trend up">
+                                <i class="ri-arrow-up-line"></i>
+                                +12%
+                            </div>
+                        </div>
+                        <div class="stat-card-value" id="hoursThisWeek">38.5h</div>
+                        <div class="stat-card-label">Horas esta semana</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon green">
+                                <i class="ri-folder-line"></i>
+                            </div>
+                            <div class="stat-card-trend up">
+                                <i class="ri-arrow-up-line"></i>
+                                +3
+                            </div>
+                        </div>
+                        <div class="stat-card-value">5</div>
+                        <div class="stat-card-label">Proyectos activos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon blue">
+                                <i class="ri-calendar-check-line"></i>
+                            </div>
+                            <div class="stat-card-trend down">
+                                <i class="ri-arrow-down-line"></i>
+                                -2
+                            </div>
+                        </div>
+                        <div class="stat-card-value" id="vacationDays">18</div>
+                        <div class="stat-card-label">Días vacaciones</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon yellow">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card-value" id="pendingRequests">3</div>
+                        <div class="stat-card-label">Solicitudes pendientes</div>
+                    </div>
+                </div>
+
+                <!-- Clock Card -->
+                <div class="clock-card" id="clockCard">
+                    <div class="clock-time" id="clockTime">00:00:00</div>
+                    <div class="clock-date" id="clockDate">Lunes, 16 de Diciembre 2025</div>
+                    <div class="clock-status">
+                        <span class="status-indicator" id="clockStatusDot"></span>
+                        <span id="clockStatusText">Sin fichar</span>
+                    </div>
+                    <div class="clock-actions">
+                        <button class="clock-btn clock-btn-primary" id="btnClockIn" onclick="clockIn()">
+                            <i class="ri-login-box-line"></i>
+                            Entrada
+                        </button>
+                        <button class="clock-btn clock-btn-secondary" id="btnClockOut" onclick="clockOut()" disabled>
+                            <i class="ri-logout-box-line"></i>
+                            Salida
+                        </button>
+                        <button class="clock-btn clock-btn-secondary" id="btnPause" onclick="togglePause()" disabled>
+                            <i class="ri-pause-line"></i>
+                            Pausa
+                        </button>
+                    </div>
+                </div>
+
+                <div class="cards-grid" style="margin-top: 32px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Actividad Reciente</h3>
+                            <button class="btn btn-sm btn-secondary">Ver todo</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-list" id="activityList">
+                                <div class="activity-item">
+                                    <div class="activity-icon clock">
+                                        <i class="ri-login-box-line"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Entrada registrada</div>
+                                        <div class="activity-desc">Inicio de jornada</div>
+                                    </div>
+                                    <div class="activity-time">08:55</div>
+                                </div>
+                                <div class="activity-item">
+                                    <div class="activity-icon project">
+                                        <i class="ri-folder-add-line"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">2h imputadas</div>
+                                        <div class="activity-desc">Proyecto: Web Corporativa</div>
+                                    </div>
+                                    <div class="activity-time">11:30</div>
+                                </div>
+                                <div class="activity-item">
+                                    <div class="activity-icon absence">
+                                        <i class="ri-calendar-event-line"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Solicitud de vacaciones</div>
+                                        <div class="activity-desc">23-27 Dic 2025</div>
+                                    </div>
+                                    <div class="activity-time">Ayer</div>
+                                </div>
+                                <div class="activity-item">
+                                    <div class="activity-icon success">
+                                        <i class="ri-checkbox-circle-line"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Ausencia aprobada</div>
+                                        <div class="activity-desc">Permiso personal 20 Dic</div>
+                                    </div>
+                                    <div class="activity-time">13 Dic</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Proyectos Activos</h3>
+                            <button class="btn btn-sm btn-secondary" onclick="showPage('proyectos')">Ver todos</button>
+                        </div>
+                        <div class="card-body">
+                            <div id="projectsList">
+                                <div class="project-item">
+                                    <div class="project-color" style="background: var(--primary);"></div>
+                                    <div class="project-info">
+                                        <div class="project-name">Web Corporativa</div>
+                                        <div class="project-client">Cliente: TechSolutions</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 75%; background: var(--primary);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="project-hours">
+                                        <div class="project-hours-value">45.5h</div>
+                                        <div class="project-hours-label">/ 60h</div>
+                                    </div>
+                                </div>
+                                <div class="project-item">
+                                    <div class="project-color" style="background: var(--info);"></div>
+                                    <div class="project-info">
+                                        <div class="project-name">App Móvil</div>
+                                        <div class="project-client">Cliente: StartupXYZ</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 40%; background: var(--info);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="project-hours">
+                                        <div class="project-hours-value">32h</div>
+                                        <div class="project-hours-label">/ 80h</div>
+                                    </div>
+                                </div>
+                                <div class="project-item">
+                                    <div class="project-color" style="background: var(--success);"></div>
+                                    <div class="project-info">
+                                        <div class="project-name">Mantenimiento</div>
+                                        <div class="project-client">Cliente: Interno</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 90%; background: var(--success);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="project-hours">
+                                        <div class="project-hours-value">18h</div>
+                                        <div class="project-hours-label">/ 20h</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fichaje Page -->
+            <div class="page-content hidden" id="page-fichaje">
+                <div class="timer-widget">
+                    <h3 style="text-align: center; margin-bottom: 16px; color: var(--text-primary);">Control de Jornada</h3>
+                    <div class="timer-display">
+                        <div class="timer-time" id="workTimer">00:00:00</div>
+                    </div>
+                    <div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 24px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: 700; color: var(--success);" id="todayEntry">--:--</div>
+                            <div style="font-size: 13px; color: var(--text-tertiary);">Entrada</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: 700; color: var(--danger);" id="todayExit">--:--</div>
+                            <div style="font-size: 13px; color: var(--text-tertiary);">Salida</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 24px; font-weight: 700; color: var(--warning);" id="todayPause">00:00</div>
+                            <div style="font-size: 13px; color: var(--text-tertiary);">Pausa</div>
+                        </div>
+                    </div>
+                    <div class="timer-controls">
+                        <button class="clock-btn clock-btn-primary" id="btnClockIn2" onclick="clockIn()">
+                            <i class="ri-login-box-line"></i>
+                            Fichar Entrada
+                        </button>
+                        <button class="clock-btn clock-btn-secondary" id="btnClockOut2" onclick="clockOut()" disabled>
+                            <i class="ri-logout-box-line"></i>
+                            Fichar Salida
+                        </button>
+                        <button class="clock-btn clock-btn-secondary" id="btnPause2" onclick="togglePause()" disabled>
+                            <i class="ri-pause-line"></i>
+                            Pausa
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Historial de Fichajes - Diciembre 2025</h3>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-sm action-btn-secondary" onclick="openModal('correctionModal')">
+                                <i class="ri-edit-line"></i>
+                                Solicitar Corrección
+                            </button>
+                            <button class="btn btn-sm action-btn-primary" onclick="exportData('fichajes')">
+                                <i class="ri-download-line"></i>
+                                Exportar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Entrada</th>
+                                        <th>Salida</th>
+                                        <th>Pausas</th>
+                                        <th>Total</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clockHistoryTable">
+                                    <tr>
+                                        <td>Lun 16/12</td>
+                                        <td>08:55</td>
+                                        <td>--:--</td>
+                                        <td>00:00</td>
+                                        <td>--:--</td>
+                                        <td><span class="status-badge pending">En curso</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Vie 13/12</td>
+                                        <td>09:02</td>
+                                        <td>18:15</td>
+                                        <td>01:00</td>
+                                        <td>8h 13m</td>
+                                        <td><span class="status-badge completed">Completado</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Jue 12/12</td>
+                                        <td>08:45</td>
+                                        <td>17:55</td>
+                                        <td>00:45</td>
+                                        <td>8h 25m</td>
+                                        <td><span class="status-badge completed">Completado</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Mié 11/12</td>
+                                        <td>09:10</td>
+                                        <td>18:30</td>
+                                        <td>01:00</td>
+                                        <td>8h 20m</td>
+                                        <td><span class="status-badge completed">Completado</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Mar 10/12</td>
+                                        <td>08:58</td>
+                                        <td>18:05</td>
+                                        <td>00:30</td>
+                                        <td>8h 37m</td>
+                                        <td><span class="status-badge active">Corregido</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timesheet Page -->
+            <div class="page-content hidden" id="page-timesheet">
+                <div class="timer-widget">
+                    <h3 style="text-align: center; margin-bottom: 16px; color: var(--text-primary);">Temporizador de Proyecto</h3>
+                    <div class="timer-display">
+                        <div class="timer-time" id="projectTimer">00:00:00</div>
+                    </div>
+                    <div class="timer-project">
+                        <i class="ri-folder-line" style="color: var(--primary);"></i>
+                        <select id="timerProjectSelect">
+                            <option value="">Selecciona un proyecto...</option>
+                            <option value="1">Web Corporativa</option>
+                            <option value="2">App Móvil</option>
+                            <option value="3">Mantenimiento</option>
+                            <option value="4">E-commerce</option>
+                            <option value="5">API Backend</option>
+                        </select>
+                    </div>
+                    <div class="timer-controls">
+                        <button class="btn btn-primary" id="btnStartTimer" onclick="startProjectTimer()">
+                            <i class="ri-play-line"></i>
+                            Iniciar
+                        </button>
+                        <button class="btn btn-secondary" id="btnStopTimer" onclick="stopProjectTimer()" disabled>
+                            <i class="ri-stop-line"></i>
+                            Parar y Guardar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="timesheet-header">
+                    <div class="timesheet-week">
+                        <button class="btn btn-icon btn-secondary" onclick="changeWeek(-1)">
+                            <i class="ri-arrow-left-s-line"></i>
+                        </button>
+                        <span style="font-size: 18px; font-weight: 600; color: var(--text-primary);" id="weekRange">9 - 15 Diciembre 2025</span>
+                        <button class="btn btn-icon btn-secondary" onclick="changeWeek(1)">
+                            <i class="ri-arrow-right-s-line"></i>
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary action-btn-secondary" onclick="openModal('addTimeModal')">
+                            <i class="ri-add-line"></i>
+                            Añadir Tiempo
+                        </button>
+                        <button class="btn btn-primary action-btn-primary" onclick="submitTimesheet()">
+                            <i class="ri-send-plane-line"></i>
+                            Enviar Parte
+                        </button>
+                    </div>
+                </div>
+
+                <div class="timesheet-grid">
+                    <div class="timesheet-row">
+                        <div class="timesheet-cell header" style="justify-content: flex-start;">Proyecto</div>
+                        <div class="timesheet-cell header">Lun</div>
+                        <div class="timesheet-cell header">Mar</div>
+                        <div class="timesheet-cell header">Mié</div>
+                        <div class="timesheet-cell header">Jue</div>
+                        <div class="timesheet-cell header">Vie</div>
+                        <div class="timesheet-cell header">Sáb</div>
+                        <div class="timesheet-cell header">Dom</div>
+                        <div class="timesheet-cell header">Total</div>
+                    </div>
+                    <div class="timesheet-row">
+                        <div class="timesheet-cell project">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary); margin-right: 12px;"></span>
+                            Web Corporativa
+                        </div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="2" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="3" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="4" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="2" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="3" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="0" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="0" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell total">14h</div>
+                    </div>
+                    <div class="timesheet-row">
+                        <div class="timesheet-cell project">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--info); margin-right: 12px;"></span>
+                            App Móvil
+                        </div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="4" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="3" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="2" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="4" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="3" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="0" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="0" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell total">16h</div>
+                    </div>
+                    <div class="timesheet-row">
+                        <div class="timesheet-cell project">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--success); margin-right: 12px;"></span>
+                            Mantenimiento
+                        </div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="2" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="2" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="2" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="2" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="2" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="0" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell"><input type="number" class="timesheet-input" value="0" min="0" max="24" step="0.5"></div>
+                        <div class="timesheet-cell total">10h</div>
+                    </div>
+                    <div class="timesheet-row" style="background: var(--background);">
+                        <div class="timesheet-cell project" style="font-weight: 700;">Total Diario</div>
+                        <div class="timesheet-cell total">8h</div>
+                        <div class="timesheet-cell total">8h</div>
+                        <div class="timesheet-cell total">8h</div>
+                        <div class="timesheet-cell total">8h</div>
+                        <div class="timesheet-cell total">8h</div>
+                        <div class="timesheet-cell total">0h</div>
+                        <div class="timesheet-cell total">0h</div>
+                        <div class="timesheet-cell total" style="font-size: 18px; color: var(--primary);">40h</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proyectos Page -->
+            <div class="page-content hidden" id="page-proyectos">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div class="tabs">
+                        <div class="tab active" onclick="filterProjects('all')">Todos</div>
+                        <div class="tab" onclick="filterProjects('active')">Activos</div>
+                        <div class="tab" onclick="filterProjects('completed')">Completados</div>
+                    </div>
+                    <button class="btn btn-primary admin-only" onclick="openModal('newProjectModal')">
+                        <i class="ri-add-line"></i>
+                        Nuevo Proyecto
+                    </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;" id="projectsGrid">
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(220, 38, 38, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ri-global-line" style="font-size: 24px; color: var(--primary);"></i>
+                            </div>
+                            <span class="badge badge-success">Activo</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: var(--text-primary);">Web Corporativa</h3>
+                        <p style="font-size: 14px; color: var(--text-tertiary); margin-bottom: 16px;">TechSolutions S.L.</p>
+                        <div class="progress-bar" style="margin-bottom: 12px;">
+                            <div class="progress-fill" style="width: 75%; background: var(--primary);"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-tertiary);">
+                            <span>45.5h / 60h</span>
+                            <span>75%</span>
+                        </div>
+                    </div>
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ri-smartphone-line" style="font-size: 24px; color: var(--info);"></i>
+                            </div>
+                            <span class="badge badge-success">Activo</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: var(--text-primary);">App Móvil</h3>
+                        <p style="font-size: 14px; color: var(--text-tertiary); margin-bottom: 16px;">StartupXYZ</p>
+                        <div class="progress-bar" style="margin-bottom: 12px;">
+                            <div class="progress-fill" style="width: 40%; background: var(--info);"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-tertiary);">
+                            <span>32h / 80h</span>
+                            <span>40%</span>
+                        </div>
+                    </div>
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(34, 197, 94, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ri-tools-line" style="font-size: 24px; color: var(--success);"></i>
+                            </div>
+                            <span class="badge badge-success">Activo</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: var(--text-primary);">Mantenimiento</h3>
+                        <p style="font-size: 14px; color: var(--text-tertiary); margin-bottom: 16px;">Interno</p>
+                        <div class="progress-bar" style="margin-bottom: 12px;">
+                            <div class="progress-fill" style="width: 90%; background: var(--success);"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-tertiary);">
+                            <span>18h / 20h</span>
+                            <span>90%</span>
+                        </div>
+                    </div>
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ri-shopping-cart-line" style="font-size: 24px; color: var(--warning);"></i>
+                            </div>
+                            <span class="badge badge-success">Activo</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: var(--text-primary);">E-commerce</h3>
+                        <p style="font-size: 14px; color: var(--text-tertiary); margin-bottom: 16px;">ModaStyle</p>
+                        <div class="progress-bar" style="margin-bottom: 12px;">
+                            <div class="progress-fill" style="width: 25%; background: var(--warning);"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-tertiary);">
+                            <span>25h / 100h</span>
+                            <span>25%</span>
+                        </div>
+                    </div>
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(139, 92, 246, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ri-server-line" style="font-size: 24px; color: #8b5cf6;"></i>
+                            </div>
+                            <span class="badge badge-success">Activo</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: var(--text-primary);">API Backend</h3>
+                        <p style="font-size: 14px; color: var(--text-tertiary); margin-bottom: 16px;">DataCorp</p>
+                        <div class="progress-bar" style="margin-bottom: 12px;">
+                            <div class="progress-fill" style="width: 60%; background: #8b5cf6;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-tertiary);">
+                            <span>48h / 80h</span>
+                            <span>60%</span>
+                        </div>
+                    </div>
+                    <div class="card" style="padding: 24px; opacity: 0.6;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: var(--background-dark); display: flex; align-items: center; justify-content: center;">
+                                <i class="ri-file-text-line" style="font-size: 24px; color: var(--text-tertiary);"></i>
+                            </div>
+                            <span class="badge badge-neutral">Completado</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: var(--text-primary);">Landing Page</h3>
+                        <p style="font-size: 14px; color: var(--text-tertiary); margin-bottom: 16px;">EventosPlus</p>
+                        <div class="progress-bar" style="margin-bottom: 12px;">
+                            <div class="progress-fill" style="width: 100%; background: var(--text-tertiary);"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-tertiary);">
+                            <span>40h / 40h</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ausencias Page -->
+            <div class="page-content hidden" id="page-ausencias">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div class="tabs">
+                        <div class="tab active" onclick="filterAbsences('all')">Todas</div>
+                        <div class="tab" onclick="filterAbsences('pending')">Pendientes</div>
+                        <div class="tab" onclick="filterAbsences('approved')">Aprobadas</div>
+                        <div class="tab" onclick="filterAbsences('rejected')">Rechazadas</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('newAbsenceModal')">
+                        <i class="ri-add-line"></i>
+                        Nueva Solicitud
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Mis Solicitudes de Ausencia</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Fecha Inicio</th>
+                                        <th>Fecha Fin</th>
+                                        <th>Días</th>
+                                        <th>Motivo</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="absencesTable">
+                                    <tr>
+                                        <td>
+                                            <span class="badge badge-info">
+                                                <i class="ri-plane-line"></i>
+                                                Vacaciones
+                                            </span>
+                                        </td>
+                                        <td>23/12/2025</td>
+                                        <td>27/12/2025</td>
+                                        <td>5</td>
+                                        <td>Navidad</td>
+                                        <td><span class="badge badge-warning">Pendiente</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary action-btn-danger" onclick="cancelAbsence(1)">
+                                                <i class="ri-close-line"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="badge badge-success">
+                                                <i class="ri-user-line"></i>
+                                                Permiso
+                                            </span>
+                                        </td>
+                                        <td>20/12/2025</td>
+                                        <td>20/12/2025</td>
+                                        <td>1</td>
+                                        <td>Asuntos personales</td>
+                                        <td><span class="badge badge-success">Aprobada</span></td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="badge badge-warning">
+                                                <i class="ri-hospital-line"></i>
+                                                Baja médica
+                                            </span>
+                                        </td>
+                                        <td>02/12/2025</td>
+                                        <td>03/12/2025</td>
+                                        <td>2</td>
+                                        <td>Gripe</td>
+                                        <td><span class="badge badge-success">Aprobada</span></td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="badge badge-info">
+                                                <i class="ri-plane-line"></i>
+                                                Vacaciones
+                                            </span>
+                                        </td>
+                                        <td>15/11/2025</td>
+                                        <td>15/11/2025</td>
+                                        <td>1</td>
+                                        <td>Día libre</td>
+                                        <td><span class="badge badge-danger">Rechazada</span></td>
+                                        <td>-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cards-grid" style="margin-top: 24px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Resumen de Ausencias 2025</h3>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                                <div style="background: var(--background); padding: 16px; border-radius: 12px; text-align: center;">
+                                    <div style="font-size: 32px; font-weight: 700; color: var(--info);" id="remainingVacationDays">18</div>
+                                    <div style="font-size: 13px; color: var(--text-tertiary);">Días vacaciones restantes</div>
+                                </div>
+                                <div style="background: var(--background); padding: 16px; border-radius: 12px; text-align: center;">
+                                    <div style="font-size: 32px; font-weight: 700; color: var(--success);">4</div>
+                                    <div style="font-size: 13px; color: var(--text-tertiary);">Días disfrutados</div>
+                                </div>
+                                <div style="background: var(--background); padding: 16px; border-radius: 12px; text-align: center;">
+                                    <div style="font-size: 32px; font-weight: 700; color: var(--warning);">2</div>
+                                    <div style="font-size: 13px; color: var(--text-tertiary);">Días baja médica</div>
+                                </div>
+                                <div style="background: var(--background); padding: 16px; border-radius: 12px; text-align: center;">
+                                    <div style="font-size: 32px; font-weight: 700; color: var(--primary);">1</div>
+                                    <div style="font-size: 13px; color: var(--text-tertiary);">Permisos utilizados</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Tipos de Ausencia</h3>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--background); border-radius: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <i class="ri-plane-line" style="color: var(--info);"></i>
+                                        <span>Vacaciones</span>
+                                    </div>
+                                    <span style="color: var(--text-tertiary);">22 días/año</span>
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--background); border-radius: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <i class="ri-user-line" style="color: var(--success);"></i>
+                                        <span>Permiso personal</span>
+                                    </div>
+                                    <span style="color: var(--text-tertiary);">3 días/año</span>
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--background); border-radius: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <i class="ri-hospital-line" style="color: var(--warning);"></i>
+                                        <span>Baja médica</span>
+                                    </div>
+                                    <span style="color: var(--text-tertiary);">Según necesidad</span>
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--background); border-radius: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <i class="ri-book-line" style="color: #8b5cf6;"></i>
+                                        <span>Formación</span>
+                                    </div>
+                                    <span style="color: var(--text-tertiary);">Según acuerdo</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendario Page -->
+            <div class="page-content hidden" id="page-calendario">
+                <div class="calendar">
+                    <div class="calendar-header">
+                        <div class="calendar-nav">
+                            <button class="calendar-nav-btn" onclick="changeMonth(-1)">
+                                <i class="ri-arrow-left-s-line"></i>
+                            </button>
+                            <button class="calendar-nav-btn" onclick="changeMonth(1)">
+                                <i class="ri-arrow-right-s-line"></i>
+                            </button>
+                        </div>
+                        <div class="calendar-month" id="calendarMonth">Diciembre 2025</div>
+                        <button class="btn btn-secondary" onclick="goToToday()">Hoy</button>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be generated by JS -->
+                    </div>
+                </div>
+
+                <div class="cards-grid" style="margin-top: 24px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Leyenda</h3>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 16px; height: 16px; border-radius: 4px; background: var(--info);"></div>
+                                    <span>Vacaciones</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 16px; height: 16px; border-radius: 4px; background: var(--warning);"></div>
+                                    <span>Baja médica</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 16px; height: 16px; border-radius: 4px; background: var(--success);"></div>
+                                    <span>Festivo</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 16px; height: 16px; border-radius: 4px; background: #8b5cf6;"></div>
+                                    <span>Permiso</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Próximas Ausencias del Equipo</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-list">
+                                <div class="activity-item">
+                                    <div class="activity-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--info);">
+                                        <i class="ri-plane-line"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Carlos López</div>
+                                        <div class="activity-desc">Vacaciones</div>
+                                    </div>
+                                    <div class="activity-time">20-24 Dic</div>
+                                </div>
+                                <div class="activity-item">
+                                    <div class="activity-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                                        <i class="ri-user-line"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">María Sánchez</div>
+                                        <div class="activity-desc">Permiso personal</div>
+                                    </div>
+                                    <div class="activity-time">18 Dic</div>
+                                </div>
+                                <div class="activity-item">
+                                    <div class="activity-icon" style="background: rgba(34, 197, 94, 0.1); color: var(--success);">
+                                        <i class="ri-calendar-check-line"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Festivo</div>
+                                        <div class="activity-desc">Navidad</div>
+                                    </div>
+                                    <div class="activity-time">25 Dic</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usuarios Page (Admin) -->
+            <div class="page-content hidden" id="page-usuarios">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div class="tabs">
+                        <div class="tab active">Todos</div>
+                        <div class="tab">Activos</div>
+                        <div class="tab">Inactivos</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('newUserModal')">
+                        <i class="ri-user-add-line"></i>
+                        Nuevo Usuario
+                    </button>
+                </div>
+
+                <div class="user-list" id="usersList">
+                    <div class="user-card-item">
+                        <div class="user-card-avatar" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);">AM</div>
+                        <div class="user-card-name">Ana Martínez</div>
+                        <div class="user-card-email">ana.martinez@empresa.com</div>
+                        <span class="badge badge-danger" style="margin-bottom: 12px;">Administrador</span>
+                        <div class="user-card-actions">
+                            <button class="btn btn-sm btn-secondary action-btn-secondary">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary action-btn-secondary">
+                                <i class="ri-mail-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="user-card-item">
+                        <div class="user-card-avatar" style="background: linear-gradient(135deg, var(--info) 0%, #1d4ed8 100%);">CL</div>
+                        <div class="user-card-name">Carlos López</div>
+                        <div class="user-card-email">carlos.lopez@empresa.com</div>
+                        <span class="badge badge-info" style="margin-bottom: 12px;">Responsable</span>
+                        <div class="user-card-actions">
+                            <button class="btn btn-sm btn-secondary action-btn-secondary">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary action-btn-secondary">
+                                <i class="ri-mail-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="user-card-item">
+                        <div class="user-card-avatar" style="background: linear-gradient(135deg, var(--success) 0%, #15803d 100%);">LG</div>
+                        <div class="user-card-name">Laura García</div>
+                        <div class="user-card-email">laura.garcia@empresa.com</div>
+                        <span class="badge badge-success" style="margin-bottom: 12px;">Empleado</span>
+                        <div class="user-card-actions">
+                            <button class="btn btn-sm btn-secondary action-btn-secondary">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary action-btn-secondary">
+                                <i class="ri-mail-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="user-card-item">
+                        <div class="user-card-avatar" style="background: linear-gradient(135deg, var(--warning) 0%, #b45309 100%);">MS</div>
+                        <div class="user-card-name">María Sánchez</div>
+                        <div class="user-card-email">maria.sanchez@empresa.com</div>
+                        <span class="badge badge-success" style="margin-bottom: 12px;">Empleado</span>
+                        <div class="user-card-actions">
+                            <button class="btn btn-sm btn-secondary action-btn-secondary">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary action-btn-secondary">
+                                <i class="ri-mail-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="user-card-item">
+                        <div class="user-card-avatar" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">PR</div>
+                        <div class="user-card-name">Pedro Ruiz</div>
+                        <div class="user-card-email">pedro.ruiz@empresa.com</div>
+                        <span class="badge badge-success" style="margin-bottom: 12px;">Empleado</span>
+                        <div class="user-card-actions">
+                            <button class="btn btn-sm btn-secondary action-btn-secondary">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary action-btn-secondary">
+                                <i class="ri-mail-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="user-card-item" style="opacity: 0.5;">
+                        <div class="user-card-avatar" style="background: var(--background-dark);">JR</div>
+                        <div class="user-card-name">Juan Rodríguez</div>
+                        <div class="user-card-email">juan.rodriguez@empresa.com</div>
+                        <span class="badge badge-neutral" style="margin-bottom: 12px;">Inactivo</span>
+                        <div class="user-card-actions">
+                            <button class="btn btn-sm btn-secondary action-btn-secondary">
+                                <i class="ri-refresh-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aprobaciones Page (Admin/Manager) -->
+            <div class="page-content hidden" id="page-aprobaciones">
+                <div class="tabs" style="margin-bottom: 24px;">
+                    <div class="tab active" onclick="filterApprovals('all')">Todas</div>
+                    <div class="tab" onclick="filterApprovals('absences')">Ausencias</div>
+                    <div class="tab" onclick="filterApprovals('corrections')">Correcciones</div>
+                    <div class="tab" onclick="filterApprovals('timesheets')">Timesheets</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Solicitudes Pendientes</h3>
+                        <span class="badge badge-warning">3 pendientes</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Solicitante</th>
+                                        <th>Detalle</th>
+                                        <th>Fecha</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="approvalsTable">
+                                    <tr>
+                                        <td><span class="badge badge-info"><i class="ri-plane-line"></i> Ausencia</span></td>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--success); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">LG</div>
+                                                Laura García
+                                            </div>
+                                        </td>
+                                        <td>Vacaciones: 23-27 Dic (5 días)</td>
+                                        <td>14/12/2025</td>
+                                        <td><span class="badge badge-warning">Pendiente</span></td>
+                                        <td>
+                                            <div style="display: flex; gap: 8px;">
+                                                <button class="btn btn-sm action-btn-primary" onclick="approveRequest(1)">
+                                                    <i class="ri-check-line"></i>
+                                                </button>
+                                                <button class="btn btn-sm action-btn-danger" onclick="rejectRequest(1)">
+                                                    <i class="ri-close-line"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge badge-warning"><i class="ri-edit-line"></i> Corrección</span></td>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--warning); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">MS</div>
+                                                María Sánchez
+                                            </div>
+                                        </td>
+                                        <td>Fichaje 12/12: Olvidé fichar salida (18:30)</td>
+                                        <td>13/12/2025</td>
+                                        <td><span class="badge badge-warning">Pendiente</span></td>
+                                        <td>
+                                            <div style="display: flex; gap: 8px;">
+                                                <button class="btn btn-sm action-btn-primary" onclick="approveRequest(2)">
+                                                    <i class="ri-check-line"></i>
+                                                </button>
+                                                <button class="btn btn-sm action-btn-danger" onclick="rejectRequest(2)">
+                                                    <i class="ri-close-line"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge badge-success"><i class="ri-time-line"></i> Timesheet</span></td>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <div style="width: 32px; height: 32px; border-radius: 8px; background: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">PR</div>
+                                                Pedro Ruiz
+                                            </div>
+                                        </td>
+                                        <td>Parte semanal 9-15 Dic (40h)</td>
+                                        <td>15/12/2025</td>
+                                        <td><span class="badge badge-warning">Pendiente</span></td>
+                                        <td>
+                                            <div style="display: flex; gap: 8px;">
+                                                <button class="btn btn-sm action-btn-primary" onclick="approveRequest(3)">
+                                                    <i class="ri-check-line"></i>
+                                                </button>
+                                                <button class="btn btn-sm action-btn-danger" onclick="rejectRequest(3)">
+                                                    <i class="ri-close-line"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h3 class="card-title">Historial de Aprobaciones</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Solicitante</th>
+                                        <th>Detalle</th>
+                                        <th>Fecha</th>
+                                        <th>Estado</th>
+                                        <th>Aprobador</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="badge badge-info"><i class="ri-user-line"></i> Ausencia</span></td>
+                                        <td>Laura García</td>
+                                        <td>Permiso personal 20 Dic</td>
+                                        <td>10/12/2025</td>
+                                        <td><span class="badge badge-success">Aprobada</span></td>
+                                        <td>Ana Martínez</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge badge-warning"><i class="ri-edit-line"></i> Corrección</span></td>
+                                        <td>Carlos López</td>
+                                        <td>Fichaje 05/12: Error entrada</td>
+                                        <td>06/12/2025</td>
+                                        <td><span class="badge badge-success">Aprobada</span></td>
+                                        <td>Ana Martínez</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge badge-info"><i class="ri-plane-line"></i> Ausencia</span></td>
+                                        <td>María Sánchez</td>
+                                        <td>Vacaciones 15 Nov</td>
+                                        <td>01/11/2025</td>
+                                        <td><span class="badge badge-danger">Rechazada</span></td>
+                                        <td>Carlos López</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informes Page (Admin) -->
+            <div class="page-content hidden" id="page-informes">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div class="tabs">
+                        <div class="tab active">Resumen</div>
+                        <div class="tab">Por Proyecto</div>
+                        <div class="tab">Por Usuario</div>
+                        <div class="tab">Ausencias</div>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <select class="form-select" style="width: auto;">
+                            <option>Diciembre 2025</option>
+                            <option>Noviembre 2025</option>
+                            <option>Octubre 2025</option>
+                        </select>
+                        <button class="btn btn-primary action-btn-primary" onclick="exportData('informe')">
+                            <i class="ri-download-line"></i>
+                            Exportar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon red">
+                                <i class="ri-time-line"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card-value">842h</div>
+                        <div class="stat-card-label">Horas totales equipo</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon green">
+                                <i class="ri-folder-line"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card-value">5</div>
+                        <div class="stat-card-label">Proyectos activos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon blue">
+                                <i class="ri-team-line"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card-value">5</div>
+                        <div class="stat-card-label">Empleados activos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon yellow">
+                                <i class="ri-calendar-event-line"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card-value">12</div>
+                        <div class="stat-card-label">Días ausencia total</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary);">Horas por Proyecto - Diciembre 2025</h3>
+                    </div>
+                    <div class="chart-bars" id="projectChart">
+                        <div class="chart-bar">
+                            <div class="chart-bar-value">180h</div>
+                            <div class="chart-bar-fill" style="height: 180px;"></div>
+                            <div class="chart-bar-label">Web Corp.</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="chart-bar-value">220h</div>
+                            <div class="chart-bar-fill" style="height: 200px; background: linear-gradient(180deg, var(--info) 0%, #1d4ed8 100%);"></div>
+                            <div class="chart-bar-label">App Móvil</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="chart-bar-value">142h</div>
+                            <div class="chart-bar-fill" style="height: 142px; background: linear-gradient(180deg, var(--success) 0%, #15803d 100%);"></div>
+                            <div class="chart-bar-label">Manten.</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="chart-bar-value">180h</div>
+                            <div class="chart-bar-fill" style="height: 180px; background: linear-gradient(180deg, var(--warning) 0%, #b45309 100%);"></div>
+                            <div class="chart-bar-label">E-commerce</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="chart-bar-value">120h</div>
+                            <div class="chart-bar-fill" style="height: 120px; background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%);"></div>
+                            <div class="chart-bar-label">API</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Horas por Usuario</h3>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; flex-direction: column; gap: 16px;">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">AM</div>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: var(--text-primary);">Ana Martínez</span>
+                                            <span style="font-weight: 600;">168h</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 100%; background: var(--primary);"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--info); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">CL</div>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: var(--text-primary);">Carlos López</span>
+                                            <span style="font-weight: 600;">172h</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 95%; background: var(--info);"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--success); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">LG</div>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: var(--text-primary);">Laura García</span>
+                                            <span style="font-weight: 600;">160h</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 90%; background: var(--success);"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--warning); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">MS</div>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: var(--text-primary);">María Sánchez</span>
+                                            <span style="font-weight: 600;">168h</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 92%; background: var(--warning);"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">PR</div>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="color: var(--text-primary);">Pedro Ruiz</span>
+                                            <span style="font-weight: 600;">174h</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 97%; background: #8b5cf6;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Resumen de Ausencias</h3>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                                <div style="background: var(--background); padding: 20px; border-radius: 12px; text-align: center;">
+                                    <div style="font-size: 36px; font-weight: 700; color: var(--info);">8</div>
+                                    <div style="font-size: 13px; color: var(--text-tertiary);">Días vacaciones</div>
+                                </div>
+                                <div style="background: var(--background); padding: 20px; border-radius: 12px; text-align: center;">
+                                    <div style="font-size: 36px; font-weight: 700; color: var(--warning);">3</div>
+                                    <div style="font-size: 13px; color: var(--text-tertiary);">Días baja</div>
+                                </div>
+                                <div style="background: var(--background); padding: 20px; border-radius: 12px; text-align: center;">
+                                    <div style="font-size: 36px; font-weight: 700; color: #8b5cf6;">1</div>
+                                    <div style="font-size: 13px; color: var(--text-tertiary);">Permisos</div>
+                                </div>
+                                <div style="background: var(--background); padding: 20px; border-radius: 12px; text-align: center;">
+                                    <div style="font-size: 36px; font-weight: 700; color: var(--success);">0</div>
+                                    <div style="font-size: 13px; color: var(--text-tertiary);">Formación</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auditoría Page (Admin) -->
+            <div class="page-content hidden" id="page-auditoria">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary);">Registro de Auditoría</h2>
+                    <div style="display: flex; gap: 12px;">
+                        <select class="form-select" style="width: auto;">
+                            <option>Todas las acciones</option>
+                            <option>Fichajes</option>
+                            <option>Ausencias</option>
+                            <option>Usuarios</option>
+                            <option>Configuración</option>
+                        </select>
+                        <button class="btn btn-outline action-btn-secondary" onclick="exportData('auditoria')">
+                            <i class="ri-download-line"></i>
+                            Exportar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div id="auditLog">
+                            <div class="audit-item">
+                                <div class="audit-content">
+                                    <div class="audit-action">Solicitud de ausencia creada</div>
+                                    <div class="audit-details">Laura García solicitó vacaciones (23-27 Dic 2025)</div>
+                                    <div class="audit-time">Hoy 14:32 • IP: 192.168.1.45</div>
+                                </div>
+                            </div>
+                            <div class="audit-item">
+                                <div class="audit-content">
+                                    <div class="audit-action">Corrección de fichaje solicitada</div>
+                                    <div class="audit-details">María Sánchez: Salida 12/12 → 18:30</div>
+                                    <div class="audit-time">Ayer 09:15 • IP: 192.168.1.78</div>
+                                </div>
+                            </div>
+                            <div class="audit-item">
+                                <div class="audit-content">
+                                    <div class="audit-action">Timesheet enviado</div>
+                                    <div class="audit-details">Pedro Ruiz envió parte semanal 9-15 Dic (40h)</div>
+                                    <div class="audit-time">15/12/2025 18:00 • IP: 192.168.1.23</div>
+                                </div>
+                            </div>
+                            <div class="audit-item">
+                                <div class="audit-content">
+                                    <div class="audit-action">Ausencia aprobada</div>
+                                    <div class="audit-details">Ana Martínez aprobó permiso de Laura García (20 Dic)</div>
+                                    <div class="audit-time">13/12/2025 11:20 • IP: 192.168.1.10</div>
+                                </div>
+                            </div>
+                            <div class="audit-item">
+                                <div class="audit-content">
+                                    <div class="audit-action">Corrección aprobada</div>
+                                    <div class="audit-details">Ana Martínez aprobó corrección de fichaje de Carlos López</div>
+                                    <div class="audit-time">06/12/2025 10:45 • IP: 192.168.1.10</div>
+                                </div>
+                            </div>
+                            <div class="audit-item">
+                                <div class="audit-content">
+                                    <div class="audit-action">Usuario creado</div>
+                                    <div class="audit-details">Ana Martínez creó cuenta para Pedro Ruiz</div>
+                                    <div class="audit-time">01/12/2025 09:00 • IP: 192.168.1.10</div>
+                                </div>
+                            </div>
+                            <div class="audit-item">
+                                <div class="audit-content">
+                                    <div class="audit-action">Proyecto creado</div>
+                                    <div class="audit-details">Ana Martínez creó proyecto "E-commerce" para ModaStyle</div>
+                                    <div class="audit-time">28/11/2025 14:30 • IP: 192.168.1.10</div>
+                                </div>
+                            </div>
+                            <div class="audit-item">
+                                <div class="audit-content">
+                                    <div class="audit-action">Configuración actualizada</div>
+                                    <div class="audit-details">Calendario laboral 2025 actualizado</div>
+                                    <div class="audit-time">15/11/2025 09:00 • IP: 192.168.1.10</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Perfil Page -->
+            <div class="page-content hidden" id="page-perfil">
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Información Personal</h3>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 32px;">
+                                <div style="width: 100px; height: 100px; border-radius: 20px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: var(--white);" id="profileAvatar">AM</div>
+                                <div>
+                                    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 4px; color: var(--text-primary);" id="profileName">Ana Martínez</h2>
+                                    <p style="color: var(--text-tertiary); margin-bottom: 8px;" id="profileEmail">ana.martinez@empresa.com</p>
+                                    <span class="badge badge-danger" id="profileRole">Administrador</span>
+                                </div>
+                            </div>
+                            <form id="profileForm">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Nombre</label>
+                                        <input type="text" class="form-input" value="Ana" id="profileFirstName">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Apellidos</label>
+                                        <input type="text" class="form-input" value="Martínez García" id="profileLastName">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-input" value="ana.martinez@empresa.com" id="profileEmailInput">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-input" value="+34 612 345 678">
+                                </div>
+                                <button type="button" class="btn btn-primary action-btn-primary" onclick="saveProfile()">
+                                    <i class="ri-save-line"></i>
+                                    Guardar Cambios
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Seguridad</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">Contraseña Actual</label>
+                                <input type="password" class="form-input" placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nueva Contraseña</label>
+                                <input type="password" class="form-input" placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirmar Nueva Contraseña</label>
+                                <input type="password" class="form-input" placeholder="••••••••">
+                            </div>
+                            <button type="button" class="btn btn-secondary action-btn-secondary" onclick="changePassword()">
+                                <i class="ri-lock-line"></i>
+                                Cambiar Contraseña
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuración Page (Admin) -->
+            <div class="page-content hidden" id="page-configuracion">
+                <div class="tabs" style="margin-bottom: 24px;">
+                    <div class="tab active">General</div>
+                    <div class="tab">Calendario</div>
+                    <div class="tab">Notificaciones</div>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Datos de la Empresa</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">Nombre de la Empresa</label>
+                                <input type="text" class="form-input" value="TechPyme S.L.">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">CIF</label>
+                                <input type="text" class="form-input" value="B12345678">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Dirección</label>
+                                <input type="text" class="form-input" value="Calle Principal 123, 28001 Madrid">
+                            </div>
+                            <button type="button" class="btn btn-primary action-btn-primary" onclick="saveConfig()">
+                                <i class="ri-save-line"></i>
+                                Guardar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Configuración de Jornada</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Horas semanales</label>
+                                    <input type="number" class="form-input" value="40">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Días laborables</label>
+                                    <select class="form-select">
+                                        <option>Lunes a Viernes</option>
+                                        <option>Lunes a Sábado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Hora entrada por defecto</label>
+                                    <input type="time" class="form-input" value="09:00">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Hora salida por defecto</label>
+                                    <input type="time" class="form-input" value="18:00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <input type="checkbox" checked style="margin-right: 8px;">
+                                    Permitir registro de pausas
+                                </label>
+                            </div>
+                            <button type="button" class="btn btn-primary action-btn-primary" onclick="saveConfig()">
+                                <i class="ri-save-line"></i>
+                                Guardar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h3 class="card-title">Tipos de Ausencia</h3>
+                        <button class="btn btn-sm btn-primary action-btn-primary">
+                            <i class="ri-add-line"></i>
+                            Nuevo Tipo
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Días/Año</th>
+                                        <th>Requiere Aprobación</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Vacaciones</td>
+                                        <td>22</td>
+                                        <td>Sí</td>
+                                        <td><span class="badge badge-success">Activo</span></td>
+                                        <td><button class="btn btn-sm btn-secondary action-btn-secondary"><i class="ri-edit-line"></i></button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Permiso personal</td>
+                                        <td>3</td>
+                                        <td>Sí</td>
+                                        <td><span class="badge badge-success">Activo</span></td>
+                                        <td><button class="btn btn-sm btn-secondary action-btn-secondary"><i class="ri-edit-line"></i></button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Baja médica</td>
+                                        <td>-</td>
+                                        <td>No</td>
+                                        <td><span class="badge badge-success">Activo</span></td>
+                                        <td><button class="btn btn-sm btn-secondary action-btn-secondary"><i class="ri-edit-line"></i></button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Formación</td>
+                                        <td>-</td>
+                                        <td>Sí</td>
+                                        <td><span class="badge badge-success">Activo</span></td>
+                                        <td><button class="btn btn-sm btn-secondary action-btn-secondary"><i class="ri-edit-line"></i></button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notifications Panel -->
+    <div class="notifications-panel" id="notificationsPanel">
+        <div class="notifications-header">
+            <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary);">Notificaciones</h3>
+            <button class="btn btn-sm btn-secondary" onclick="toggleNotifications()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="notifications-list" id="notificationsList">
+            <div class="notification-item unread">
+                <div class="notification-icon" style="background: rgba(220, 38, 38, 0.1); color: var(--primary);">
+                    <i class="ri-checkbox-circle-line"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Ausencia aprobada</div>
+                    <div class="notification-text">Tu permiso para el 20 Dic ha sido aprobado</div>
+                    <div class="notification-time">Hace 2 horas</div>
+                </div>
+            </div>
+            <div class="notification-item unread">
+                <div class="notification-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">
+                    <i class="ri-time-line"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Recordatorio de fichaje</div>
+                    <div class="notification-text">No olvides fichar tu salida hoy</div>
+                    <div class="notification-time">Hace 4 horas</div>
+                </div>
+            </div>
+            <div class="notification-item">
+                <div class="notification-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--info);">
+                    <i class="ri-calendar-event-line"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Nueva solicitud de ausencia</div>
+                    <div class="notification-text">Laura García ha solicitado vacaciones</div>
+                    <div class="notification-time">Ayer</div>
+                </div>
+            </div>
+            <div class="notification-item">
+                <div class="notification-icon" style="background: rgba(34, 197, 94, 0.1); color: var(--success);">
+                    <i class="ri-folder-line"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Proyecto actualizado</div>
+                    <div class="notification-text">Se te ha asignado al proyecto E-commerce</div>
+                    <div class="notification-time">Hace 2 días</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nueva Ausencia -->
+    <div class="modal-overlay" id="newAbsenceModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Nueva Solicitud de Ausencia</h3>
+                <button class="modal-close" onclick="closeModal('newAbsenceModal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Tipo de Ausencia</label>
+                    <select class="form-select" id="absenceType">
+                        <option value="vacation">Vacaciones</option>
+                        <option value="personal">Permiso personal</option>
+                        <option value="sick">Baja médica</option>
+                        <option value="training">Formación</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Fecha Inicio</label>
+                        <input type="date" class="form-input" id="absenceStart">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha Fin</label>
+                        <input type="date" class="form-input" id="absenceEnd">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Motivo (opcional)</label>
+                    <textarea class="form-textarea" placeholder="Describe el motivo de tu ausencia..." id="absenceReason"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('newAbsenceModal')">Cancelar</button>
+                <button class="btn btn-primary action-btn-primary" onclick="submitAbsence()">
+                    <i class="ri-send-plane-line"></i>
+                    Enviar Solicitud
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Corrección de Fichaje -->
+    <div class="modal-overlay" id="correctionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Solicitar Corrección de Fichaje</h3>
+                <button class="modal-close" onclick="closeModal('correctionModal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Fecha del Fichaje</label>
+                    <input type="date" class="form-input" id="correctionDate">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo de Corrección</label>
+                    <select class="form-select" id="correctionType">
+                        <option value="entry">Corregir entrada</option>
+                        <option value="exit">Corregir salida</option>
+                        <option value="forgot_entry">Olvidé fichar entrada</option>
+                        <option value="forgot_exit">Olvidé fichar salida</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Hora Correcta</label>
+                    <input type="time" class="form-input" id="correctionTime">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Motivo de la Corrección</label>
+                    <textarea class="form-textarea" placeholder="Explica el motivo de la corrección..." id="correctionReason"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('correctionModal')">Cancelar</button>
+                <button class="btn btn-primary action-btn-primary" onclick="submitCorrection()">
+                    <i class="ri-send-plane-line"></i>
+                    Enviar Solicitud
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Añadir Tiempo -->
+    <div class="modal-overlay" id="addTimeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Añadir Tiempo Manualmente</h3>
+                <button class="modal-close" onclick="closeModal('addTimeModal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Proyecto</label>
+                    <select class="form-select" id="addTimeProject">
+                        <option value="1">Web Corporativa</option>
+                        <option value="2">App Móvil</option>
+                        <option value="3">Mantenimiento</option>
+                        <option value="4">E-commerce</option>
+                        <option value="5">API Backend</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Fecha</label>
+                        <input type="date" class="form-input" id="addTimeDate">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Horas</label>
+                        <input type="number" class="form-input" min="0.5" max="24" step="0.5" value="1" id="addTimeHours">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción (opcional)</label>
+                    <textarea class="form-textarea" placeholder="¿En qué has trabajado?" id="addTimeDesc"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addTimeModal')">Cancelar</button>
+                <button class="btn btn-primary action-btn-primary" onclick="addTimeEntry()">
+                    <i class="ri-add-line"></i>
+                    Añadir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nuevo Proyecto -->
+    <div class="modal-overlay" id="newProjectModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Nuevo Proyecto</h3>
+                <button class="modal-close" onclick="closeModal('newProjectModal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Nombre del Proyecto</label>
+                    <input type="text" class="form-input" placeholder="Ej: Rediseño Web" id="projectName">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cliente</label>
+                    <input type="text" class="form-input" placeholder="Ej: Empresa S.L." id="projectClient">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Horas Estimadas</label>
+                        <input type="number" class="form-input" placeholder="80" id="projectHours">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Estado</label>
+                        <select class="form-select" id="projectStatus">
+                            <option value="active">Activo</option>
+                            <option value="paused">Pausado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea class="form-textarea" placeholder="Describe el proyecto..." id="projectDesc"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('newProjectModal')">Cancelar</button>
+                <button class="btn btn-primary action-btn-primary" onclick="createProject()">
+                    <i class="ri-add-line"></i>
+                    Crear Proyecto
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nuevo Usuario -->
+    <div class="modal-overlay" id="newUserModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Nuevo Usuario</h3>
+                <button class="modal-close" onclick="closeModal('newUserModal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-input" placeholder="Nombre" id="newUserName">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Apellidos</label>
+                        <input type="text" class="form-input" placeholder="Apellidos" id="newUserLastName">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" placeholder="email@empresa.com" id="newUserEmail">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rol</label>
+                    <select class="form-select" id="newUserRole">
+                        <option value="employee">Empleado</option>
+                        <option value="manager">Responsable</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" checked style="margin-right: 8px;">
+                        Enviar invitación por email
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('newUserModal')">Cancelar</button>
+                <button class="btn btn-primary action-btn-primary" onclick="createUser()">
+                    <i class="ri-user-add-line"></i>
+                    Crear Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+</body>
+</html>
