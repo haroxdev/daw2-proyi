@@ -46,7 +46,7 @@ const obtenerTituloPagina = (ruta) => {
         '/admin/revisiones': 'Aprobaciones',
         '/reporting': 'Informes',
         '/notificaciones': 'Notificaciones',
-        '/empresa': 'Mi Perfil',
+        '/perfil': 'Mi Perfil',
         '/departamentos': 'Configuración',
         '/tareas': 'Tareas',
         '/tipos-ausencia': 'Tipos de Ausencia',
@@ -98,7 +98,7 @@ export default function LayoutPrincipal() {
                             )}
                         </Link>
                         <Link
-                            to="/empresa"
+                            to="/perfil"
                             className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                         >
                             <IconoUsuario />
