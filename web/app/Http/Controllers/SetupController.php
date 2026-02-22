@@ -55,6 +55,17 @@ class SetupController extends Controller
                 'descripcion' => 'Administrador del sistema',
             ]);
 
+            // crea los roles base si no existen
+            Rol::firstOrCreate(
+                ['nombre' => 'responsable'],
+                ['descripcion' => 'Responsable de equipo o departamento']
+            );
+
+            Rol::firstOrCreate(
+                ['nombre' => 'empleado'],
+                ['descripcion' => 'Empleado estándar']
+            );
+
             $admin = Empleado::create([
                 'dni' => $data['admin_dni'],
                 'nombre' => $data['admin_nombre'],
