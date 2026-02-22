@@ -1,35 +1,34 @@
 /**
  * página de equipo (admin)
- * permite crear y gestionar empleados
+ * permite crear, editar y gestionar empleados
  */
 import React, { useState, useEffect } from 'react';
-import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, etiquetaEstado, Paginador, usePaginacion } from '../components';
+import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, Modal, etiquetaEstado, Paginador, usePaginacion } from '../components';
 import { empleados, datosPagina } from '../services/api';
 
+// estado inicial del formulario de creación
+const formularioVacio = {
+    dni: '', nombre: '', apellido1: '', apellido2: '', email: '',
+    contrasena: '', id_departamento: '', estado: 'alta',
+    dias_vacaciones_restantes: 22, roles: []
+};
+
 export default function PaginaEquipo() {
-    // estado local
     const [listaEmpleados, setListaEmpleados] = useState([]);
     const [departamentos, setDepartamentos] = useState([]);
     const [roles, setRoles] = useState([]);
-    const [formulario, setFormulario] = useState({
-        dni: '',
-        nombre: '',
-        apellido1: '',
-        apellido2: '',
-        email: '',
-        contrasena: '',
-        id_departamento: '',
-        estado: 'alta',
-        dias_vacaciones_restantes: 22,
-        roles: []
-    });
+    const [formulario, setFormulario] = useState({ ...formularioVacio });
     const [cargando, setCargando] = useState(false);
     const [mensaje, setMensaje] = useState(null);
+
+    // modal de edición
+    const [modalEditar, setModalEditar] = useState(false);
+    const [empleadoEditando, setEmpleadoEditando] = useState(null);
+    const [formEditar, setFormEditar] = useState({});
 
     // paginación
     const { itemsPaginados: empleadosPaginados, paginaActual, totalPaginas, setPaginaActual } = usePaginacion(listaEmpleados, 5);
 
-    // carga datos desde API
     const cargarDatos = async () => {
         try {
             const res = await datosPagina.equipo();
@@ -41,26 +40,40 @@ export default function PaginaEquipo() {
         }
     };
 
-    // cargar datos iniciales
-    useEffect(() => {
-        cargarDatos();
-    }, []);
+    useEffect(() => { cargarDatos(); }, []);
 
-    // maneja cambios en el formulario
+    // maneja cambios en el formulario de creación
     const manejarCambio = (e) => {
-        const { name, value, type, checked } = e.target;
-        
+        const { name, value, checked } = e.target;
+
         if (name === 'roles') {
             const idRol = parseInt(value);
             setFormulario(prev => ({
                 ...prev,
-                roles: checked 
+                roles: checked
                     ? [...prev.roles, idRol]
                     : prev.roles.filter(r => r !== idRol)
             }));
-        } else {
-            setFormulario(prev => ({ ...prev, [name]: value }));
+            return;
         }
+        setFormulario(prev => ({ ...prev, [name]: value }));
+    };
+
+    // maneja cambios en el formulario de edición
+    const manejarCambioEditar = (e) => {
+        const { name, value, checked } = e.target;
+
+        if (name === 'roles') {
+            const idRol = parseInt(value);
+            setFormEditar(prev => ({
+                ...prev,
+                roles: checked
+                    ? [...prev.roles, idRol]
+                    : prev.roles.filter(r => r !== idRol)
+            }));
+            return;
+        }
+        setFormEditar(prev => ({ ...prev, [name]: value }));
     };
 
     // crea un nuevo empleado
@@ -71,11 +84,7 @@ export default function PaginaEquipo() {
         try {
             await empleados.crear(formulario);
             setMensaje({ tipo: 'exito', texto: 'Empleado creado correctamente' });
-            setFormulario({
-                dni: '', nombre: '', apellido1: '', apellido2: '', email: '',
-                contrasena: '', id_departamento: '', estado: 'alta',
-                dias_vacaciones_restantes: 22, roles: []
-            });
+            setFormulario({ ...formularioVacio });
             await cargarDatos();
         } catch (error) {
             setMensaje({ tipo: 'error', texto: error.response?.data?.message || 'Error al crear empleado' });
@@ -84,15 +93,39 @@ export default function PaginaEquipo() {
         }
     };
 
-    // actualiza un empleado
-    const manejarActualizar = async (idEmpleado, datos) => {
+    // abre el modal de edición con los datos del empleado
+    const abrirEditar = (emp) => {
+        setEmpleadoEditando(emp);
+        setFormEditar({
+            dni: emp.dni || '',
+            nombre: emp.nombre || '',
+            apellido1: emp.apellido1 || '',
+            apellido2: emp.apellido2 || '',
+            email: emp.email || '',
+            contrasena: '',
+            id_departamento: emp.id_departamento || '',
+            estado: emp.estado || 'alta',
+            dias_vacaciones_restantes: emp.dias_vacaciones_restantes ?? 22,
+            roles: emp.roles?.map(r => r.id_rol) || [],
+        });
+        setModalEditar(true);
+    };
+
+    // guarda cambios del empleado editado
+    const manejarGuardarEdicion = async (e) => {
+        e.preventDefault();
+        if (!empleadoEditando) return;
+
         setCargando(true);
+        setMensaje(null);
         try {
-            await empleados.actualizar(idEmpleado, datos);
-            setMensaje({ tipo: 'exito', texto: 'Empleado actualizado' });
+            await empleados.actualizar(empleadoEditando.id_empleado, formEditar);
+            setMensaje({ tipo: 'exito', texto: 'Empleado actualizado correctamente' });
+            setModalEditar(false);
+            setEmpleadoEditando(null);
             await cargarDatos();
         } catch (error) {
-            setMensaje({ tipo: 'error', texto: 'Error al actualizar empleado' });
+            setMensaje({ tipo: 'error', texto: error.response?.data?.message || 'Error al actualizar empleado' });
         } finally {
             setCargando(false);
         }
@@ -113,10 +146,10 @@ export default function PaginaEquipo() {
     return (
         <div className="space-y-6">
             {mensaje && (
-                <Alerta 
-                    tipo={mensaje.tipo} 
-                    mensaje={mensaje.texto} 
-                    onCerrar={() => setMensaje(null)} 
+                <Alerta
+                    tipo={mensaje.tipo}
+                    mensaje={mensaje.texto}
+                    onCerrar={() => setMensaje(null)}
                 />
             )}
 
@@ -198,17 +231,17 @@ export default function PaginaEquipo() {
                             min="0"
                         />
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">Roles</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Roles</label>
                             <div className="flex flex-wrap gap-3">
                                 {roles.map(rol => (
-                                    <label key={rol.id_rol} className="flex items-center gap-2 text-slate-300">
+                                    <label key={rol.id_rol} className="flex items-center gap-2 text-gray-700">
                                         <input
                                             type="checkbox"
                                             name="roles"
                                             value={rol.id_rol}
                                             checked={formulario.roles.includes(rol.id_rol)}
                                             onChange={manejarCambio}
-                                            className="w-4 h-4 rounded bg-slate-800 border-slate-700 text-rose-500"
+                                            className="w-4 h-4 rounded border-gray-300 text-blue-600"
                                         />
                                         {rol.nombre}
                                     </label>
@@ -231,6 +264,7 @@ export default function PaginaEquipo() {
                                 <CeldaEncabezado>Departamento</CeldaEncabezado>
                                 <CeldaEncabezado>Estado</CeldaEncabezado>
                                 <CeldaEncabezado>Roles</CeldaEncabezado>
+                                <CeldaEncabezado>Acciones</CeldaEncabezado>
                             </EncabezadoTabla>
                             <CuerpoTabla>
                                 {empleadosPaginados.length > 0 ? (
@@ -238,7 +272,7 @@ export default function PaginaEquipo() {
                                         <FilaTabla key={emp.id_empleado}>
                                             <CeldaTabla>
                                                 <div className="font-semibold">{emp.nombre}</div>
-                                                <div className="text-xs text-slate-500">
+                                                <div className="text-xs text-gray-500">
                                                     {emp.apellido1} {emp.apellido2}
                                                 </div>
                                             </CeldaTabla>
@@ -250,16 +284,25 @@ export default function PaginaEquipo() {
                                             <CeldaTabla>
                                                 <div className="flex flex-wrap gap-1">
                                                     {emp.roles?.map(r => (
-                                                        <span key={r.id_rol} className="px-2 py-0.5 text-xs bg-alert rounded">
+                                                        <span key={r.id_rol} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
                                                             {r.nombre}
                                                         </span>
                                                     )) || '—'}
                                                 </div>
                                             </CeldaTabla>
+                                            <CeldaTabla>
+                                                <Boton
+                                                    tamano="pequeno"
+                                                    variante="contornoPrimario"
+                                                    onClick={() => abrirEditar(emp)}
+                                                >
+                                                    Editar
+                                                </Boton>
+                                            </CeldaTabla>
                                         </FilaTabla>
                                     ))
                                 ) : (
-                                    <TablaVacia mensaje="No hay empleados." columnas={5} />
+                                    <TablaVacia mensaje="No hay empleados." columnas={6} />
                                 )}
                             </CuerpoTabla>
                         </Tabla>
@@ -271,6 +314,134 @@ export default function PaginaEquipo() {
                     </Tarjeta>
                 </div>
             </div>
+
+            {/* modal de edición de empleado */}
+            <Modal
+                abierto={modalEditar}
+                onCerrar={() => { setModalEditar(false); setEmpleadoEditando(null); }}
+                titulo={`Editar: ${empleadoEditando?.nombre || ''} ${empleadoEditando?.apellido1 || ''}`}
+                anchura="grande"
+            >
+                {empleadoEditando && (
+                    <form onSubmit={manejarGuardarEdicion} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <CampoFormulario
+                                etiqueta="DNI"
+                                tipo="text"
+                                nombre="dni"
+                                valor={formEditar.dni}
+                                onChange={manejarCambioEditar}
+                                requerido
+                            />
+                            <CampoFormulario
+                                etiqueta="Email"
+                                tipo="email"
+                                nombre="email"
+                                valor={formEditar.email}
+                                onChange={manejarCambioEditar}
+                                requerido
+                            />
+                        </div>
+                        <CampoFormulario
+                            etiqueta="Nombre"
+                            tipo="text"
+                            nombre="nombre"
+                            valor={formEditar.nombre}
+                            onChange={manejarCambioEditar}
+                            requerido
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                            <CampoFormulario
+                                etiqueta="Apellido 1"
+                                tipo="text"
+                                nombre="apellido1"
+                                valor={formEditar.apellido1}
+                                onChange={manejarCambioEditar}
+                                requerido
+                            />
+                            <CampoFormulario
+                                etiqueta="Apellido 2"
+                                tipo="text"
+                                nombre="apellido2"
+                                valor={formEditar.apellido2}
+                                onChange={manejarCambioEditar}
+                            />
+                        </div>
+
+                        <div className="border-t border-gray-200 pt-4">
+                            <CampoFormulario
+                                etiqueta="Nueva contraseña"
+                                tipo="password"
+                                nombre="contrasena"
+                                valor={formEditar.contrasena}
+                                onChange={manejarCambioEditar}
+                                placeholder="Dejar vacío para no cambiar"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                Mínimo 8 caracteres. Solo se cambia si se rellena.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4">
+                            <CampoFormulario
+                                etiqueta="Departamento"
+                                tipo="select"
+                                nombre="id_departamento"
+                                valor={formEditar.id_departamento}
+                                onChange={manejarCambioEditar}
+                                opciones={opcionesDepartamento}
+                            />
+                            <CampoFormulario
+                                etiqueta="Estado"
+                                tipo="select"
+                                nombre="estado"
+                                valor={formEditar.estado}
+                                onChange={manejarCambioEditar}
+                                opciones={opcionesEstado}
+                            />
+                            <CampoFormulario
+                                etiqueta="Vacaciones"
+                                tipo="number"
+                                nombre="dias_vacaciones_restantes"
+                                valor={formEditar.dias_vacaciones_restantes}
+                                onChange={manejarCambioEditar}
+                                min="0"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Roles</label>
+                            <div className="flex flex-wrap gap-3">
+                                {roles.map(rol => (
+                                    <label key={rol.id_rol} className="flex items-center gap-2 text-gray-700">
+                                        <input
+                                            type="checkbox"
+                                            name="roles"
+                                            value={rol.id_rol}
+                                            checked={formEditar.roles?.includes(rol.id_rol)}
+                                            onChange={manejarCambioEditar}
+                                            className="w-4 h-4 rounded border-gray-300 text-blue-600"
+                                        />
+                                        {rol.nombre}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-2">
+                            <Boton
+                                variante="contorno"
+                                onClick={() => { setModalEditar(false); setEmpleadoEditando(null); }}
+                            >
+                                Cancelar
+                            </Boton>
+                            <Boton tipo="submit" cargando={cargando}>
+                                Guardar cambios
+                            </Boton>
+                        </div>
+                    </form>
+                )}
+            </Modal>
         </div>
     );
 }
