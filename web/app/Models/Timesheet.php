@@ -32,4 +32,23 @@ class Timesheet extends Model
     {
         return $this->belongsTo(Empleado::class, 'id_aprobador', 'id_empleado');
     }
+
+    // obtiene los tiempos imputados del empleado dentro del periodo
+    public function lineas()
+    {
+        return TiempoTarea::where('id_empleado', $this->id_empleado)
+            ->whereDate('inicio', '>=', $this->inicio_periodo)
+            ->whereDate('inicio', '<=', $this->fin_periodo)
+            ->with('tarea.proyecto')
+            ->get();
+    }
+
+    // calcula total de horas del periodo
+    public function totalHoras(): float
+    {
+        return $this->lineas()->sum(function ($t) {
+            if (!$t->inicio || !$t->fin) return 0;
+            return round($t->inicio->diffInMinutes($t->fin) / 60, 2);
+        });
+    }
 }
