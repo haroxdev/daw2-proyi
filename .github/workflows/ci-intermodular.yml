@@ -1,0 +1,29 @@
+name: CI Intermodular Web
+
+on:
+  push:
+    branches: ["develop"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js y Cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilación y Tests
+        run: npm run test
+        env:
+          API_TOKEN: ${{ secrets.API_TOKEN }}
