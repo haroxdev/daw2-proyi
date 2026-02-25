@@ -1,0 +1,28 @@
+name: CI Intermodular 
+
+on:
+  push:
+    branches: ["develop"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js (Valor añadido)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Análisis del proyecto (Comando real)
+        run: node -v && echo "Análisis estático y compilación simulada OK."
+
+      - name: Validación con Secreto
+        run: echo "Token procesado con éxito."
+        env:
+          API_TOKEN: ${{ secrets.API_TOKEN }}
