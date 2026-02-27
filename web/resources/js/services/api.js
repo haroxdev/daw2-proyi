@@ -242,6 +242,32 @@ export const setup = {
         api.post('/setup', datos)
 };
 
+// funciones de exportación csv
+export const exportacion = {
+    fichajes: (filtros = {}) => {
+        const params = new URLSearchParams();
+        if (filtros.inicio) params.append('inicio', filtros.inicio);
+        if (filtros.fin) params.append('fin', filtros.fin);
+        if (filtros.id_empleado) params.append('id_empleado', filtros.id_empleado);
+        return `/exportar/fichajes?${params.toString()}`;
+    },
+    proyectos: (filtros = {}) => {
+        const params = new URLSearchParams();
+        if (filtros.inicio) params.append('inicio', filtros.inicio);
+        if (filtros.fin) params.append('fin', filtros.fin);
+        if (filtros.id_proyecto) params.append('id_proyecto', filtros.id_proyecto);
+        return `/exportar/proyectos?${params.toString()}`;
+    },
+    ausencias: (filtros = {}) => {
+        const params = new URLSearchParams();
+        if (filtros.inicio) params.append('inicio', filtros.inicio);
+        if (filtros.fin) params.append('fin', filtros.fin);
+        if (filtros.id_empleado) params.append('id_empleado', filtros.id_empleado);
+        if (filtros.id_tipo) params.append('id_tipo', filtros.id_tipo);
+        return `/exportar/ausencias?${params.toString()}`;
+    },
+};
+
 /**
  * carga datos de una página desde la api
  * se usa cuando la navegación es client-side y __DATOS_PAGINA__ está obsoleto
@@ -260,7 +286,13 @@ export const datosPagina = {
     departamentos: () => api.get('/api/datos/departamentos'),
     tiposAusencia: () => api.get('/api/datos/tipos-ausencia'),
     revisiones: () => api.get('/api/datos/revisiones'),
-    reporting: () => api.get('/api/datos/reporting'),
+    reporting: (filtros = {}) => {
+        const params = new URLSearchParams();
+        if (filtros.inicio) params.append('inicio', filtros.inicio);
+        if (filtros.fin) params.append('fin', filtros.fin);
+        const query = params.toString();
+        return api.get(`/api/datos/reporting${query ? '?' + query : ''}`);
+    },
     contadores: () => api.get('/api/datos/contadores'),
     perfil: () => api.get('/api/datos/perfil'),
     festivos: () => api.get('/api/datos/festivos'),
