@@ -10,6 +10,18 @@
 
 ---
 
+### 🌐 Demo
+
+**URL:** [https://gestime.harox.dev](https://gestime.harox.dev)
+
+| Rol | Email | Contraseña |
+|-----|-------|------------|
+| **Admin** | `admin@gestime.dev` | `admin123` |
+| **Responsable** | `responsable@gestime.dev` | `admin123` |
+| **Empleado** | `empleado@gestime.dev` | `admin123` |
+
+---
+
 ## Tecnologías
 
 | Capa | Tecnología |
