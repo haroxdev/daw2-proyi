@@ -126,4 +126,64 @@ class ConfiguracionCalendarioTest extends TestCase
         $this->assertEquals('Ausencia', $arr[0]['title']);
         $this->assertEquals('2026-02-01', substr($arr[0]['start'], 0, 10));
     }
+
+    public function test_administrador_puede_crear_festivos_y_aparecen_en_calendario(): void
+    {
+        $admin = Empleado::create([
+            'dni' => '70000005F', 'nombre' => 'Admin', 'apellido1' => 'Festivos', 'apellido2' => '', 'email' => 'admin_festivos@t.test', 'contrasena' => 'secret123', 'estado' => 'alta', 'dias_vacaciones_restantes' => 0
+        ]);
+        $rolAdmin = Rol::create(['nombre' => 'admin', 'descripcion' => 'Administrador']);
+        $admin->roles()->attach($rolAdmin->id_rol);
+
+        $this->actingAs($admin);
+
+        // Crear festivo
+        $fechaFestivo = Carbon::now()->addDays(5)->format('Y-m-d');
+        $this->postJson('/festivos', [
+            'fecha' => $fechaFestivo,
+            'nombre' => 'Día de la Constitución',
+            'descripcion' => 'Festivo Nacional',
+            'recurrente' => true,
+        ])->assertStatus(201); // 201 Created
+
+        $this->assertDatabaseHas('festivo', [
+            'nombre' => 'Día de la Constitución',
+            'fecha' => $fechaFestivo,
+        ]);
+
+        // Verificar que aparece en el calendario general
+        $resp = $this->getJson('/api/datos/calendario');
+        $resp->assertStatus(200);
+        
+        $festivosResponse = collect($resp->json('festivos'));
+        $this->assertNotEmpty($festivosResponse);
+        $this->assertTrue($festivosResponse->contains('title', 'Día de la Constitución'));
+    }
+
+    public function test_ausencias_aprobadas_aparecen_en_datos_calendario(): void
+    {
+        $empleado = Empleado::create([
+            'dni' => '70000006G', 'nombre' => 'Ausencia', 'apellido1' => 'Aprobada', 'apellido2' => '', 'email' => 'ausencia_ap@t.test', 'contrasena' => 'x', 'estado' => 'alta', 'dias_vacaciones_restantes' => 0
+        ]);
+
+        $tipo = TipoAusencia::create(['nombre' => 'Asuntos Propios', 'remunerado' => true]);
+
+        Solicitud::create([
+            'id_empleado' => $empleado->id_empleado,
+            'id_tipo' => $tipo->id_tipo,
+            'inicio' => '2026-03-10',
+            'fin' => '2026-03-12',
+            'comentario' => 'Días de asuntos propios',
+            'estado' => 'aprobada',
+        ]);
+
+        $this->actingAs($empleado);
+        
+        $resp = $this->getJson('/api/datos/calendario');
+        $resp->assertStatus(200);
+        
+        $ausenciasResponse = collect($resp->json('ausencias'));
+        $this->assertNotEmpty($ausenciasResponse);
+        $this->assertTrue($ausenciasResponse->contains('title', 'Asuntos Propios'));
+    }
 }
