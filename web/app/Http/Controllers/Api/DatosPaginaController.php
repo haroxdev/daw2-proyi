@@ -388,11 +388,16 @@ class DatosPaginaController extends Controller
     }
 
     // datos de reporting (admin) — delega en ReportingService
-    public function reporting(ReportingService $reporting): JsonResponse
+    public function reporting(Request $request, ReportingService $reporting): JsonResponse
     {
+        $inicio = $request->query('inicio');
+        $fin = $request->query('fin');
+
         return response()->json([
-            'resumen' => $reporting->resumenProductividad(),
-            'horasPorProyecto' => $reporting->horasPorProyecto(),
+            'resumen' => $reporting->resumenProductividad($inicio, $fin),
+            'horasPorProyecto' => $reporting->horasPorProyecto($inicio, $fin),
+            'horasPorEmpleado' => $reporting->horasPorEmpleado($inicio, $fin),
+            'ausenciasPorTipo' => $reporting->ausenciasPorTipo($inicio, $fin),
         ]);
     }
 

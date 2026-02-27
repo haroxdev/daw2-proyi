@@ -323,7 +323,9 @@ class SpaController extends Controller
         return view('spa', [
             'datosPagina' => [
                 'resumen' => $reporting->resumenProductividad(),
-                'horasPorProyecto' => $reporting->horasPorProyecto()
+                'horasPorProyecto' => $reporting->horasPorProyecto(),
+                'horasPorEmpleado' => $reporting->horasPorEmpleado(),
+                'ausenciasPorTipo' => $reporting->ausenciasPorTipo(),
             ]
         ]);
     }
