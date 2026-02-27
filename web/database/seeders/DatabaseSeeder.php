@@ -72,7 +72,7 @@ class DatabaseSeeder extends Seeder
 
         // usuario admin
         $admin = Empleado::create([
-            'dni' => '00000000A',
+            'dni' => '00000001A',
             'nombre' => 'Admin',
             'apellido1' => 'Sistema',
             'apellido2' => null,
@@ -86,7 +86,7 @@ class DatabaseSeeder extends Seeder
 
         // usuario responsable
         $responsable = Empleado::create([
-            'dni' => '11111111B',
+            'dni' => '11111112B',
             'nombre' => 'María',
             'apellido1' => 'García',
             'apellido2' => 'López',
@@ -100,7 +100,7 @@ class DatabaseSeeder extends Seeder
 
         // usuario empleado desarrollo
         $empleado1 = Empleado::create([
-            'dni' => '22222222C',
+            'dni' => '22222223C',
             'nombre' => 'Carlos',
             'apellido1' => 'Martínez',
             'apellido2' => 'Ruiz',
@@ -114,7 +114,7 @@ class DatabaseSeeder extends Seeder
 
         // usuario empleado rrhh
         $empleado2 = Empleado::create([
-            'dni' => '33333333D',
+            'dni' => '33333334D',
             'nombre' => 'Ana',
             'apellido1' => 'Fernández',
             'apellido2' => 'Sánchez',
@@ -128,7 +128,7 @@ class DatabaseSeeder extends Seeder
 
         // usuario con doble rol (admin + responsable) para probar
         $superusuario = Empleado::create([
-            'dni' => '44444444E',
+            'dni' => '44444445E',
             'nombre' => 'Pedro',
             'apellido1' => 'Navarro',
             'apellido2' => 'Torres',

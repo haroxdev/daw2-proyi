@@ -179,7 +179,7 @@ export default function BarraLateral() {
         { ruta: '/tareas', icono: IconoTareas, texto: 'Tareas' },
         { ruta: '/ausencias', icono: IconoAusencias, texto: 'Ausencias', badge: contadores.ausencias },
         { ruta: '/calendario', icono: IconoCalendario, texto: 'Calendario' },
-        { ruta: '/notificaciones', icono: IconoAuditoria, texto: 'Notificaciones', badge: contadores.notificaciones },
+        // { ruta: '/notificaciones', icono: IconoAuditoria, texto: 'Notificaciones', badge: contadores.notificaciones }, retirado debido a boton superior
     ];
 
     // panel admin: gestión de personas, aprobaciones e informes
