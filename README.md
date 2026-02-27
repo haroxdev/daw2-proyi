@@ -1,4 +1,4 @@
-# GesTime
+# GesTime - PROYI GRUPO C
 
 > Aplicación web de **gestión de tiempo y control horario** para empresas. Permite el fichaje de jornadas, gestión de ausencias, calendario de eventos, timesheets, proyectos, tareas y reporting — todo desde una interfaz moderna tipo SPA.
 
