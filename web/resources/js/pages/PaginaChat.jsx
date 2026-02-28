@@ -1,6 +1,6 @@
 // página de chat — mensajería entre empleados en tiempo real
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Tarjeta, Boton, CampoFormulario, Modal, Alerta } from '../components';
+import { Tarjeta, Boton, CampoFormulario, Modal, Alerta, BuscadorEmpleados, nombreCompleto } from '../components';
 import { chat } from '../services/api';
 import { useAuth } from '../context/ContextoAuth';
 import { formatearFechaHora as formatearFecha, obtenerIniciales } from '../utils';
@@ -86,7 +86,7 @@ export default function PaginaChat() {
     const [mensajes, setMensajes] = useState([]);
     const [textoMensaje, setTextoMensaje] = useState('');
     const [modalAbierto, setModalAbierto] = useState(false);
-    const [nuevoContactoId, setNuevoContactoId] = useState('');
+    const [busquedaContacto, setBusquedaContacto] = useState('');
     const [cargando, setCargando] = useState(false);
     const [cargandoInicial, setCargandoInicial] = useState(true);
     const [enviando, setEnviando] = useState(false);
@@ -246,11 +246,11 @@ export default function PaginaChat() {
     /**
      * inicia conversación con un nuevo contacto
      */
-    const abrirNuevoChat = async () => {
-        if (!nuevoContactoId) return;
+    const abrirNuevoChat = async (contacto) => {
+        if (!contacto) return;
 
-        const idNumerico = parseInt(nuevoContactoId, 10);
-        if (isNaN(idNumerico)) return;
+        const idNumerico = contacto.id_empleado;
+        if (!idNumerico) return;
 
         try {
             setCargando(true);
@@ -271,7 +271,6 @@ export default function PaginaChat() {
             }
 
             setModalAbierto(false);
-            setNuevoContactoId('');
         } catch (error) {
             console.error('error abriendo nuevo chat:', error);
             setAlerta({ tipo: 'error', texto: 'Error al iniciar conversación' });
@@ -325,17 +324,51 @@ export default function PaginaChat() {
                         </Boton>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                        {contactos.length > 0 ? (
-                            contactos.map((contacto) => (
-                                <BotonContacto
-                                    key={contacto.id_empleado}
-                                    contacto={contacto}
-                                    seleccionado={contactoSeleccionado?.id_empleado === contacto.id_empleado}
-                                    onClick={() => seleccionarContacto(contacto)}
+                    {/* buscador de contactos existentes */}
+                    {contactos.length > 3 && (
+                        <div className="mb-3 flex-shrink-0">
+                            <div className="relative">
+                                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    value={busquedaContacto}
+                                    onChange={(e) => setBusquedaContacto(e.target.value)}
+                                    placeholder="Buscar contacto..."
+                                    className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                                 />
-                            ))
-                        ) : (
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                        {(() => {
+                            // filtra contactos por búsqueda
+                            const normalizar = (t) => (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                            const termino = normalizar(busquedaContacto);
+                            const contactosFiltrados = termino
+                                ? contactos.filter(c => {
+                                    const nombre = normalizar([c.nombre, c.apellido1, c.apellido2].filter(Boolean).join(' '));
+                                    const email = normalizar(c.email);
+                                    return nombre.includes(termino) || email.includes(termino);
+                                })
+                                : contactos;
+
+                            return contactosFiltrados.length > 0 ? (
+                                contactosFiltrados.map((contacto) => (
+                                    <BotonContacto
+                                        key={contacto.id_empleado}
+                                        contacto={contacto}
+                                        seleccionado={contactoSeleccionado?.id_empleado === contacto.id_empleado}
+                                        onClick={() => seleccionarContacto(contacto)}
+                                    />
+                                ))
+                            ) : busquedaContacto.trim() ? (
+                                <div className="text-center py-4">
+                                    <p className="text-gray-400 text-sm">Sin resultados para "{busquedaContacto}"</p>
+                                </div>
+                            ) : (
                             <div className="text-center py-8">
                                 <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
@@ -343,7 +376,8 @@ export default function PaginaChat() {
                                 <p className="text-gray-500 text-sm">No hay conversaciones</p>
                                 <p className="text-gray-400 text-xs mt-1">Pulsa «+ Nuevo» para iniciar</p>
                             </div>
-                        )}
+                            );
+                        })()}
                     </div>
                 </Tarjeta>
 
@@ -451,46 +485,32 @@ export default function PaginaChat() {
             {/* modal nuevo contacto */}
             <Modal
                 abierto={modalAbierto}
-                onCerrar={() => { setModalAbierto(false); setNuevoContactoId(''); }}
+                onCerrar={() => setModalAbierto(false)}
                 titulo="Nueva conversación"
             >
                 <div className="space-y-4">
                     <p className="text-sm text-gray-600">
-                        Selecciona un compañero para iniciar una conversación.
+                        Busca un compañero por nombre o email para iniciar una conversación.
                     </p>
-                    <CampoFormulario
-                        etiqueta="Compañero"
-                        tipo="select"
-                        valor={nuevoContactoId}
-                        onChange={(e) => setNuevoContactoId(e.target.value)}
-                        opciones={[
-                            { valor: '', texto: 'Selecciona un compañero', deshabilitado: true },
-                            ...nuevosContactos.map(c => ({
-                                valor: String(c.id_empleado),
-                                texto: `${c.nombre} (${c.email})`
-                            }))
-                        ]}
-                    />
-                    {nuevosContactos.length === 0 && (
+                    {nuevosContactos.length > 0 ? (
+                        <BuscadorEmpleados
+                            empleados={nuevosContactos}
+                            onSeleccionar={abrirNuevoChat}
+                            placeholder="Buscar por nombre o email..."
+                        />
+                    ) : (
                         <div className="bg-gray-50 rounded-lg p-4 text-center">
                             <p className="text-sm text-gray-500">
                                 Ya tienes conversaciones con todos tus compañeros.
                             </p>
                         </div>
                     )}
-                    <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
+                    <div className="flex justify-end pt-4 border-t border-gray-100">
                         <Boton
                             variante="contorno"
-                            onClick={() => { setModalAbierto(false); setNuevoContactoId(''); }}
+                            onClick={() => setModalAbierto(false)}
                         >
-                            Cancelar
-                        </Boton>
-                        <Boton
-                            onClick={abrirNuevoChat}
-                            deshabilitado={!nuevoContactoId || nuevosContactos.length === 0}
-                            cargando={cargando}
-                        >
-                            Iniciar chat
+                            Cerrar
                         </Boton>
                     </div>
                 </div>
