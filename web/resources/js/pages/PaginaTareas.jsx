@@ -1,6 +1,6 @@
 // página de tareas (admin) — crear, gestionar tareas e imputar/ver tiempos
 import React, { useState, useEffect } from 'react';
-import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, Modal, etiquetaEstado, Paginador, usePaginacion } from '../components';
+import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, Modal, etiquetaEstado, Paginador, usePaginacion, BuscadorEmpleados } from '../components';
 import { tareas, datosPagina } from '../services/api';
 import { calcularHorasTotales, formatearDuracion, formatearFecha, formatearHora } from '../utils';
 
@@ -296,24 +296,13 @@ export default function PaginaTareas() {
                         />
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Asignar a</label>
-                            <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 space-y-1">
-                                {empleados.map(emp => (
-                                    <label key={emp.id_empleado} className="flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 px-1 rounded">
-                                        <input
-                                            type="checkbox"
-                                            name="empleados"
-                                            value={emp.id_empleado}
-                                            checked={formulario.empleados.includes(emp.id_empleado)}
-                                            onChange={manejarCambio}
-                                            className="w-4 h-4 rounded border-gray-300 text-blue-600"
-                                        />
-                                        {emp.nombre}
-                                    </label>
-                                ))}
-                                {empleados.length === 0 && (
-                                    <p className="text-xs text-gray-400">Sin empleados</p>
-                                )}
-                            </div>
+                            <BuscadorEmpleados
+                                empleados={empleados}
+                                seleccionados={formulario.empleados}
+                                onCambio={(ids) => setFormulario(prev => ({ ...prev, empleados: ids }))}
+                                multiple
+                                placeholder="Buscar empleado por nombre o email..."
+                            />
                         </div>
                         <CampoFormulario
                             etiqueta="Título"
@@ -611,31 +600,13 @@ export default function PaginaTareas() {
                     <p className="text-sm text-gray-500">
                         Selecciona los empleados que trabajarán en esta tarea.
                     </p>
-                    <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1">
-                        {empleados.map(emp => (
-                            <label
-                                key={emp.id_empleado}
-                                className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={empleadosSeleccionados.includes(emp.id_empleado)}
-                                    onChange={(e) => {
-                                        setEmpleadosSeleccionados(prev =>
-                                            e.target.checked
-                                                ? [...prev, emp.id_empleado]
-                                                : prev.filter(id => id !== emp.id_empleado)
-                                        );
-                                    }}
-                                    className="w-4 h-4 rounded border-gray-300 text-blue-600"
-                                />
-                                <span className="text-sm text-gray-700">{emp.nombre}</span>
-                            </label>
-                        ))}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                        {empleadosSeleccionados.length} empleado{empleadosSeleccionados.length !== 1 ? 's' : ''} seleccionado{empleadosSeleccionados.length !== 1 ? 's' : ''}
-                    </div>
+                    <BuscadorEmpleados
+                        empleados={empleados}
+                        seleccionados={empleadosSeleccionados}
+                        onCambio={setEmpleadosSeleccionados}
+                        multiple
+                        placeholder="Buscar empleado por nombre o email..."
+                    />
                     <div className="flex justify-end gap-3">
                         <Boton variante="contorno" onClick={() => setModalAsignar(false)}>
                             Cancelar

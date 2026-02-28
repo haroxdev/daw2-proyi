@@ -1,6 +1,6 @@
 // página de gestión de proyectos (admin) — crud con tareas y asignación
 import React, { useState, useEffect } from 'react';
-import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, Modal, etiquetaEstado, Paginador, usePaginacion } from '../components';
+import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, Modal, etiquetaEstado, Paginador, usePaginacion, BuscadorEmpleados, nombreCompleto } from '../components';
 import { proyectos, tareas, datosPagina } from '../services/api';
 import { formatearFechaMesCorto as formatearFecha } from '../utils';
 
@@ -524,7 +524,7 @@ export default function PaginaProyectos() {
                                             <span className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
                                                 <span className="text-xs font-medium text-red-700">{emp.nombre?.charAt(0)?.toUpperCase()}</span>
                                             </span>
-                                            {emp.nombre}
+                                            {nombreCompleto(emp)}
                                             <button
                                                 onClick={() => desasignarEmpleado(proyectoSeleccionado.id_proyecto, emp.id_empleado)}
                                                 className="text-gray-400 hover:text-red-600 transition-colors ml-1"
@@ -539,20 +539,14 @@ export default function PaginaProyectos() {
                                 </div>
                             )}
 
-                            {/* selector para añadir empleado */}
+                            {/* buscador para añadir empleado */}
                             {empleadosDisponibles.length > 0 && (
-                                <div className="flex items-center gap-2">
-                                    <select
-                                        className="flex-1 max-w-xs px-3 py-1.5 text-sm rounded-md bg-white border border-gray-300 text-gray-900 focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                                        onChange={(e) => { asignarEmpleado(proyectoSeleccionado.id_proyecto, e.target.value); e.target.value = ''; }}
-                                        defaultValue=""
-                                    >
-                                        <option value="" disabled>+ Añadir miembro...</option>
-                                        {empleadosDisponibles.map(emp => (
-                                            <option key={emp.id_empleado} value={emp.id_empleado}>{emp.nombre}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <BuscadorEmpleados
+                                    empleados={empleadosDisponibles}
+                                    onSeleccionar={(emp) => asignarEmpleado(proyectoSeleccionado.id_proyecto, emp.id_empleado)}
+                                    placeholder="Buscar miembro por nombre o email..."
+                                    className="max-w-sm"
+                                />
                             )}
                         </div>
 
@@ -607,17 +601,25 @@ export default function PaginaProyectos() {
                 <form onSubmit={crearTarea} className="space-y-4">
                     <CampoFormulario etiqueta="Título" tipo="text" nombre="titulo" valor={formularioTarea.titulo} onChange={manejarCambioTarea} requerido />
                     <CampoFormulario etiqueta="Descripción" tipo="textarea" nombre="descripcion" valor={formularioTarea.descripcion} onChange={manejarCambioTarea} filas={3} />
-                    <CampoFormulario
-                        etiqueta="Asignar a"
-                        tipo="select"
-                        nombre="id_empleado"
-                        valor={formularioTarea.id_empleado}
-                        onChange={manejarCambioTarea}
-                        opciones={[
-                            { valor: '', texto: 'Sin asignar' },
-                            ...(proyectoSeleccionado?.empleados || []).map(e => ({ valor: e.id_empleado, texto: e.nombre }))
-                        ]}
-                    />
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Asignar a</label>
+                        {formularioTarea.id_empleado ? (
+                            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md border border-gray-200">
+                                <span className="text-sm text-gray-900">
+                                    {nombreCompleto((proyectoSeleccionado?.empleados || []).find(e => e.id_empleado === formularioTarea.id_empleado)) || 'Empleado'}
+                                </span>
+                                <button type="button" onClick={() => setFormularioTarea(prev => ({ ...prev, id_empleado: '' }))} className="ml-auto text-gray-400 hover:text-red-600">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        ) : (
+                            <BuscadorEmpleados
+                                empleados={proyectoSeleccionado?.empleados || []}
+                                onSeleccionar={(emp) => setFormularioTarea(prev => ({ ...prev, id_empleado: emp.id_empleado }))}
+                                placeholder="Buscar empleado del equipo..."
+                            />
+                        )}
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
                         <CampoFormulario etiqueta="Prioridad" tipo="select" nombre="prioridad" valor={formularioTarea.prioridad} onChange={manejarCambioTarea} opciones={opcionesPrioridad} />
                         <CampoFormulario etiqueta="Estado" tipo="select" nombre="estado" valor={formularioTarea.estado} onChange={manejarCambioTarea} opciones={opcionesEstadoTarea} />

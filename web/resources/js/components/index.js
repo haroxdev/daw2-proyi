@@ -17,6 +17,7 @@ export {
     TablaVacia 
 } from './Tabla';
 export { default as Paginador, usePaginacion } from './Paginador';
+export { default as BuscadorEmpleados, nombreCompleto } from './BuscadorEmpleados';
 
 // iconos centralizados
 export {
