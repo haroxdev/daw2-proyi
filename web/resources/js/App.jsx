@@ -53,10 +53,10 @@ export default function App() {
                         <Route path="/chat" element={<PaginaChat />} />
                         <Route path="/notificaciones" element={<PaginaNotificaciones />} />
                         <Route path="/perfil" element={<PaginaPerfil />} />
+                        <Route path="/proyectos" element={<PaginaProyectos />} />
+                        <Route path="/tareas" element={<PaginaTareas />} />
 
                         {/* páginas admin + responsable */}
-                        <Route path="/proyectos" element={<RutaProtegida roles={['admin', 'responsable']}><PaginaProyectos /></RutaProtegida>} />
-                        <Route path="/tareas" element={<RutaProtegida roles={['admin', 'responsable']}><PaginaTareas /></RutaProtegida>} />
                         <Route path="/equipo" element={<RutaProtegida roles={['admin', 'responsable']}><PaginaEquipo /></RutaProtegida>} />
                         <Route path="/admin/revisiones" element={<RutaProtegida roles={['admin', 'responsable']}><PaginaRevisiones /></RutaProtegida>} />
                         <Route path="/reporting" element={<RutaProtegida roles={['admin', 'responsable']}><PaginaReporting /></RutaProtegida>} />
