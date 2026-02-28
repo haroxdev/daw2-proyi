@@ -1,40 +1,8 @@
-/**
- * página de tareas (admin)
- * permite crear, gestionar tareas e imputar/ver tiempos
- */
+// página de tareas (admin) — crear, gestionar tareas e imputar/ver tiempos
 import React, { useState, useEffect } from 'react';
 import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, Modal, etiquetaEstado, Paginador, usePaginacion } from '../components';
 import { tareas, datosPagina } from '../services/api';
-
-// calcula horas totales de un array de tiempos
-const calcularHorasTotales = (tiempos = []) => {
-    return tiempos.reduce((acc, t) => {
-        if (!t.inicio || !t.fin) return acc;
-        const diff = (new Date(t.fin) - new Date(t.inicio)) / 3600000;
-        return acc + diff;
-    }, 0);
-};
-
-// formatea horas decimales a "Xh Ym"
-const formatearDuracion = (horas) => {
-    if (!horas || horas <= 0) return '0h';
-    const h = Math.floor(horas);
-    const m = Math.round((horas - h) * 60);
-    if (h === 0) return `${m}min`;
-    if (m === 0) return `${h}h`;
-    return `${h}h ${m}min`;
-};
-
-// formatea fecha iso
-const formatearFecha = (iso) => {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('es-ES');
-};
-
-const formatearHora = (iso) => {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-};
+import { calcularHorasTotales, formatearDuracion, formatearFecha, formatearHora } from '../utils';
 
 export default function PaginaTareas() {
     const [listaTareas, setListaTareas] = useState([]);

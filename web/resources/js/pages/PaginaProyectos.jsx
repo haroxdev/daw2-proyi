@@ -1,8 +1,8 @@
-// página de gestión de proyectos (admin)
-// crud completo con tareas y asignación de empleados
+// página de gestión de proyectos (admin) — crud con tareas y asignación
 import React, { useState, useEffect } from 'react';
 import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, Modal, etiquetaEstado, Paginador, usePaginacion } from '../components';
 import { proyectos, tareas, datosPagina } from '../services/api';
+import { formatearFechaMesCorto as formatearFecha } from '../utils';
 
 // formulario vacío por defecto
 const formularioVacio = { nombre: '', descripcion: '', fecha_inicio: '', fecha_fin: '', estado: 'activo' };
@@ -256,10 +256,7 @@ export default function PaginaProyectos() {
         { valor: 'finalizada', texto: 'Finalizada' }
     ];
 
-    const formatearFecha = (fecha) => {
-        if (!fecha) return '—';
-        return new Date(fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-    };
+
 
     return (
         <div className="space-y-6">

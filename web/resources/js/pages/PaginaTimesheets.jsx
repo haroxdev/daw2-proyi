@@ -1,30 +1,8 @@
-/**
- * página de timesheets
- * permite crear periodos, imputar horas en tareas y enviar para aprobación
- */
+// página de timesheets — crear periodos, imputar horas y enviar para aprobación
 import React, { useState, useEffect } from 'react';
 import { Tarjeta, Boton, CampoFormulario, Alerta, Modal, Paginador, usePaginacion } from '../components';
 import { timesheets, tareas, datosPagina } from '../services/api';
-
-// calcula horas entre dos fechas iso
-const calcularHoras = (inicio, fin) => {
-    if (!inicio || !fin) return 0;
-    const diff = new Date(fin) - new Date(inicio);
-    return Math.round((diff / 3600000) * 100) / 100;
-};
-
-// formatea fecha iso a hh:mm
-const formatearHora = (iso) => {
-    if (!iso) return '—';
-    const d = new Date(iso);
-    return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-};
-
-// formatea fecha iso a dd/mm/yyyy
-const formatearFecha = (iso) => {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('es-ES');
-};
+import { calcularHoras, formatearHora, formatearFecha } from '../utils';
 
 export default function PaginaTimesheets() {
     const [listaTimesheets, setListaTimesheets] = useState([]);

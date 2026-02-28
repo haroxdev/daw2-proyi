@@ -1,41 +1,8 @@
-/**
- * página de perfil del usuario autenticado
- * permite editar nombre, email, contraseña y ver info personal
- */
+// página de perfil — editar nombre, email, contraseña y ver info personal
 import React, { useState, useEffect } from 'react';
-import { Tarjeta, Boton, CampoFormulario, Alerta } from '../components';
+import { Tarjeta, Boton, CampoFormulario, Alerta, etiquetaEstado, IconoProyecto, IconoCalendario as IconoVacaciones } from '../components';
 import { perfil, datosPagina } from '../services/api';
 import { useAuth } from '../context/ContextoAuth';
-
-// iconos
-const IconoProyecto = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-    </svg>
-);
-
-const IconoVacaciones = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-);
-
-// etiqueta de estado coloreada
-function etiquetaEstado(estado) {
-    const estilos = {
-        alta: 'bg-green-100 text-green-700',
-        baja: 'bg-red-100 text-red-700',
-        baja_temporal: 'bg-yellow-100 text-yellow-700',
-        pendiente: 'bg-yellow-100 text-yellow-700',
-        aprobada: 'bg-green-100 text-green-700',
-        rechazada: 'bg-red-100 text-red-700',
-    };
-    return (
-        <span className={`px-2 py-0.5 rounded text-xs font-medium ${estilos[estado] || 'bg-gray-100 text-gray-600'}`}>
-            {estado}
-        </span>
-    );
-}
 
 export default function PaginaPerfil() {
     const { usuario, setUsuario } = useAuth();

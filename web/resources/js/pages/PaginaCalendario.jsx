@@ -1,11 +1,9 @@
-/**
- * página de calendario
- * vista mensual con cuadrícula + creación de eventos
- */
+// página de calendario — vista mensual con cuadrícula + creación de eventos
 import React, { useState, useEffect, useMemo } from 'react';
 import { Tarjeta, Boton, CampoFormulario, Alerta, Modal, Paginador, usePaginacion } from '../components';
 import { calendario, datosPagina } from '../services/api';
 import { useAuth } from '../context/ContextoAuth';
+import { formatearFechaISO } from '../utils';
 
 // colores por tipo de evento
 const COLORES_TIPO = {
@@ -110,12 +108,7 @@ const fechaEnRango = (fecha, inicio, fin) => {
     return f >= i && f <= fi;
 };
 
-const formatearFechaISO = (fecha) => {
-    const a = fecha.getFullYear();
-    const m = String(fecha.getMonth() + 1).padStart(2, '0');
-    const d = String(fecha.getDate()).padStart(2, '0');
-    return `${a}-${m}-${d}`;
-};
+
 
 export default function PaginaCalendario() {
     const { esAdminOResponsable } = useAuth();

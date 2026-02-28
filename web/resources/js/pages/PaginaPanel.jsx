@@ -1,55 +1,10 @@
-/**
- * página panel/dashboard principal
- * muestra métricas, reloj de fichaje, actividad reciente y proyectos
- */
+// página panel/dashboard — métricas, reloj de fichaje, actividad reciente y proyectos
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Tarjeta, Boton, Alerta } from '../components';
+import { Tarjeta, Boton, Alerta, IconoReloj, IconoProyecto, IconoCalendario, IconoCheck, IconoEntrada, IconoSalida, IconoPausa } from '../components';
 import { fichaje, datosPagina } from '../services/api';
 import { useAuth } from '../context/ContextoAuth';
-
-// iconos
-const IconoReloj = () => (
-    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-
-const IconoProyecto = () => (
-    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-    </svg>
-);
-
-const IconoCalendario = () => (
-    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-);
-
-const IconoCheck = () => (
-    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-
-const IconoEntrada = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-    </svg>
-);
-
-const IconoSalida = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-    </svg>
-);
-
-const IconoPausa = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
+import { formatearHoraConSegundos, formatearFechaLarga, formatearFechaRelativa } from '../utils';
 
 // tarjeta de métrica
 function TarjetaMetrica({ icono, valor, etiqueta, variacion, color = 'rojo' }) {
@@ -168,26 +123,6 @@ export default function PaginaPanel() {
         cargarDatos();
     }, []);
 
-    // formatear hora
-    const formatearHora = (fecha) => {
-        return fecha.toLocaleTimeString('es-ES', { 
-            hour: '2-digit', 
-            minute: '2-digit', 
-            second: '2-digit',
-            hour12: false 
-        });
-    };
-
-    // formatear fecha larga
-    const formatearFechaLarga = (fecha) => {
-        return fecha.toLocaleDateString('es-ES', { 
-            weekday: 'long', 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
-        });
-    };
-
     // manejar fichaje entrada
     const manejarEntrada = async () => {
         setCargando(true);
@@ -256,32 +191,20 @@ export default function PaginaPanel() {
 
     // métricas reales del usuario
     const metricas = [
-        { icono: <IconoReloj />, valor: `${datos?.horasSemana ?? 0}h`, etiqueta: 'Horas esta semana', variacion: calcularVariacion(), color: 'rojo' },
-        { icono: <IconoProyecto />, valor: `${datos?.totalProyectos ?? 0}`, etiqueta: 'Proyectos activos', color: 'verde' },
-        { icono: <IconoCalendario />, valor: `${datos?.diasVacaciones ?? 0}`, etiqueta: 'Días vacaciones', color: 'azul' },
-        { icono: <IconoCheck />, valor: `${datos?.solicitudesPendientes ?? 0}`, etiqueta: 'Solicitudes pendientes', color: 'amarillo' },
+        { icono: <IconoReloj className="w-6 h-6" />, valor: `${datos?.horasSemana ?? 0}h`, etiqueta: 'Horas esta semana', variacion: calcularVariacion(), color: 'rojo' },
+        { icono: <IconoProyecto className="w-6 h-6" />, valor: `${datos?.totalProyectos ?? 0}`, etiqueta: 'Proyectos activos', color: 'verde' },
+        { icono: <IconoCalendario className="w-6 h-6" />, valor: `${datos?.diasVacaciones ?? 0}`, etiqueta: 'Días vacaciones', color: 'azul' },
+        { icono: <IconoCheck className="w-6 h-6" />, valor: `${datos?.solicitudesPendientes ?? 0}`, etiqueta: 'Solicitudes pendientes', color: 'amarillo' },
     ];
-
-    // formatear fecha relativa
-    const formatearFechaRelativa = (fecha) => {
-        if (!fecha) return '';
-        const d = new Date(fecha);
-        const hoy = new Date();
-        const diff = Math.floor((hoy - d) / (1000 * 60 * 60 * 24));
-        if (diff === 0) return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-        if (diff === 1) return 'Ayer';
-        if (diff < 7) return `hace ${diff}d`;
-        return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-    };
 
     // mapear tipo de notificación a icono y color
     const obtenerEstiloNotificacion = (tipo) => {
         const estilos = {
             fichaje: { icono: <IconoEntrada />, color: 'red' },
-            ausencia: { icono: <IconoCalendario />, color: 'yellow' },
-            aprobacion: { icono: <IconoCheck />, color: 'green' },
-            proyecto: { icono: <IconoProyecto />, color: 'blue' },
-            tarea: { icono: <IconoCheck />, color: 'blue' },
+            ausencia: { icono: <IconoCalendario className="w-6 h-6" />, color: 'yellow' },
+            aprobacion: { icono: <IconoCheck className="w-6 h-6" />, color: 'green' },
+            proyecto: { icono: <IconoProyecto className="w-6 h-6" />, color: 'blue' },
+            tarea: { icono: <IconoCheck className="w-6 h-6" />, color: 'blue' },
         };
         return estilos[tipo] || { icono: <IconoCheck />, color: 'gray' };
     };
@@ -355,7 +278,7 @@ export default function PaginaPanel() {
                 {/* reloj grande */}
                 <div className="relative z-10 text-center">
                     <div className="text-7xl md:text-8xl font-bold tracking-tight mb-2" style={{ fontFamily: 'system-ui' }}>
-                        {formatearHora(horaActual)}
+                        {formatearHoraConSegundos(horaActual)}
                     </div>
                     <p className="text-lg text-white/80 capitalize mb-8">
                         {formatearFechaLarga(horaActual)}

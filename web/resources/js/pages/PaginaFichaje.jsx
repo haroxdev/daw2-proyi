@@ -1,43 +1,10 @@
-/**
- * página de fichaje
- * control de jornada con reloj, historial y correcciones
- */
+// página de fichaje — control de jornada con reloj, historial y correcciones
 import React, { useState, useEffect } from 'react';
-import { Tarjeta, Boton, Modal, CampoFormulario, Alerta, Etiqueta, Paginador, usePaginacion } from '../components';
+import { Tarjeta, Boton, Modal, CampoFormulario, Alerta, Etiqueta, Paginador, usePaginacion, IconoEntrada, IconoSalida, IconoPausa, IconoExportar, IconoCorreccion } from '../components';
 import { fichaje, datosPagina } from '../services/api';
+import { formatearHora, formatearFechaCorta, calcularTiempoTrabajado } from '../utils';
 
-// iconos
-const IconoEntrada = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-    </svg>
-);
-
-const IconoSalida = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-    </svg>
-);
-
-const IconoPausa = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-
-const IconoExportar = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-    </svg>
-);
-
-const IconoCorreccion = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-    </svg>
-);
-
-// componente de etiqueta de estado
+// etiqueta visual de estado del registro de fichaje
 function EtiquetaEstado({ estado }) {
     const estilos = {
         'en_curso': 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -57,43 +24,6 @@ function EtiquetaEstado({ estado }) {
         </span>
     );
 }
-
-// formatear hora HH:MM
-const formatearHora = (fecha) => {
-    if (!fecha) return '--:--';
-    const d = typeof fecha === 'string' ? new Date(fecha) : fecha;
-    if (isNaN(d.getTime())) return fecha;
-    return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
-};
-
-// formatear fecha corta
-const formatearFechaCorta = (fecha) => {
-    if (!fecha) return '--';
-    const d = typeof fecha === 'string' ? new Date(fecha) : fecha;
-    if (isNaN(d.getTime())) return fecha;
-    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    return `${dias[d.getDay()]} ${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-};
-
-// calcular tiempo trabajado neto (descuenta pausas)
-const calcularTiempoTrabajado = (entrada, salida, pausas = []) => {
-    if (!entrada || !salida) return '--:--';
-    const inicio = new Date(entrada);
-    const fin = new Date(salida);
-    let diff = (fin - inicio) / 1000 / 60; // minutos brutos
-    // descuenta minutos de pausas cerradas
-    if (Array.isArray(pausas)) {
-        pausas.forEach(p => {
-            if (p.inicio && p.fin) {
-                diff -= (new Date(p.fin) - new Date(p.inicio)) / 1000 / 60;
-            }
-        });
-    }
-    if (diff < 0) diff = 0;
-    const horas = Math.floor(diff / 60);
-    const minutos = Math.floor(diff % 60);
-    return `${horas}h ${minutos.toString().padStart(2, '0')}m`;
-};
 
 export default function PaginaFichaje() {
     const [registros, setRegistros] = useState([]);
@@ -135,14 +65,12 @@ export default function PaginaFichaje() {
 
                 // suma segundos de todas las pausas
                 let segundosPausa = 0;
-                let enPausaActiva = false;
                 pausas.forEach(p => {
                     if (p.inicio && p.fin) {
                         segundosPausa += (new Date(p.fin) - new Date(p.inicio)) / 1000;
                     } else if (p.inicio && !p.fin) {
-                        // pausa activa: conta hasta ahora y marca flag
+                        // pausa activa: conta hasta ahora
                         segundosPausa += (ahora - new Date(p.inicio)) / 1000;
-                        enPausaActiva = true;
                     }
                 });
 

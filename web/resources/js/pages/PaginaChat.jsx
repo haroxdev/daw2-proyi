@@ -1,30 +1,9 @@
-/**
- * página de chat
- * permite enviar mensajes entre empleados en tiempo real
- */
+// página de chat — mensajería entre empleados en tiempo real
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Tarjeta, Boton, CampoFormulario, Modal, Alerta } from '../components';
 import { chat } from '../services/api';
 import { useAuth } from '../context/ContextoAuth';
-
-/**
- * formatea una fecha para mostrar
- */
-const formatearFecha = (fecha) => {
-    if (!fecha) return '';
-    if (typeof fecha === 'string' && /^\d{2}\/\d{2}\s\d{2}:\d{2}$/.test(fecha)) return fecha;
-    const d = new Date(fecha);
-    if (isNaN(d.getTime())) return String(fecha);
-    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-};
-
-/**
- * obtiene iniciales de un nombre
- */
-const obtenerIniciales = (nombre, email = '') => {
-    const texto = nombre || email || 'U';
-    return texto.slice(0, 2).toUpperCase();
-};
+import { formatearFechaHora as formatearFecha, obtenerIniciales } from '../utils';
 
 /**
  * componente de avatar para el chat
