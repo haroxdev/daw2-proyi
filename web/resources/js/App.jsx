@@ -1,10 +1,7 @@
-/**
- * componente principal de la aplicación
- * configura rutas y proveedores de contexto
- */
+// componente principal — configura rutas y proveedores de contexto
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ProveedorAuth } from './context/ContextoAuth';
+import { ProveedorAuth, useAuth } from './context/ContextoAuth';
 import { LayoutPrincipal } from './components';
 import {
     PaginaLogin,
@@ -27,8 +24,15 @@ import {
     PaginaFestivos
 } from './pages';
 
+// protege rutas que requieren roles específicos
+function RutaProtegida({ roles, children }) {
+    const { tieneRol, autenticado } = useAuth();
+    if (!autenticado) return <Navigate to="/login" replace />;
+    if (roles && !tieneRol(roles)) return <Navigate to="/panel" replace />;
+    return children;
+}
+
 export default function App() {
-    // obtiene datos del usuario inyectados por blade
     const usuarioInicial = window.__USUARIO_INICIAL__ || null;
 
     return (
@@ -40,7 +44,7 @@ export default function App() {
 
                     {/* rutas con layout principal */}
                     <Route element={<LayoutPrincipal />}>
-                        {/* páginas de usuario */}
+                        {/* páginas de usuario autenticado */}
                         <Route path="/panel" element={<PaginaPanel />} />
                         <Route path="/fichaje" element={<PaginaFichaje />} />
                         <Route path="/ausencias" element={<PaginaAusencias />} />
@@ -49,17 +53,19 @@ export default function App() {
                         <Route path="/chat" element={<PaginaChat />} />
                         <Route path="/notificaciones" element={<PaginaNotificaciones />} />
                         <Route path="/perfil" element={<PaginaPerfil />} />
-                        
-                        {/* páginas de administración */}
-                        <Route path="/proyectos" element={<PaginaProyectos />} />
-                        <Route path="/tareas" element={<PaginaTareas />} />
-                        <Route path="/equipo" element={<PaginaEquipo />} />
-                        <Route path="/empresa" element={<PaginaEmpresa />} />
-                        <Route path="/departamentos" element={<PaginaDepartamentos />} />
-                        <Route path="/tipos-ausencia" element={<PaginaTiposAusencia />} />
-                        <Route path="/admin/revisiones" element={<PaginaRevisiones />} />
-                        <Route path="/reporting" element={<PaginaReporting />} />
-                        <Route path="/festivos" element={<PaginaFestivos />} />
+
+                        {/* páginas admin + responsable */}
+                        <Route path="/proyectos" element={<RutaProtegida roles={['admin', 'responsable']}><PaginaProyectos /></RutaProtegida>} />
+                        <Route path="/tareas" element={<RutaProtegida roles={['admin', 'responsable']}><PaginaTareas /></RutaProtegida>} />
+                        <Route path="/equipo" element={<RutaProtegida roles={['admin', 'responsable']}><PaginaEquipo /></RutaProtegida>} />
+                        <Route path="/admin/revisiones" element={<RutaProtegida roles={['admin', 'responsable']}><PaginaRevisiones /></RutaProtegida>} />
+                        <Route path="/reporting" element={<RutaProtegida roles={['admin', 'responsable']}><PaginaReporting /></RutaProtegida>} />
+
+                        {/* páginas admin exclusivo */}
+                        <Route path="/empresa" element={<RutaProtegida roles={['admin']}><PaginaEmpresa /></RutaProtegida>} />
+                        <Route path="/departamentos" element={<RutaProtegida roles={['admin']}><PaginaDepartamentos /></RutaProtegida>} />
+                        <Route path="/tipos-ausencia" element={<RutaProtegida roles={['admin']}><PaginaTiposAusencia /></RutaProtegida>} />
+                        <Route path="/festivos" element={<RutaProtegida roles={['admin']}><PaginaFestivos /></RutaProtegida>} />
                     </Route>
 
                     {/* redirección por defecto */}
