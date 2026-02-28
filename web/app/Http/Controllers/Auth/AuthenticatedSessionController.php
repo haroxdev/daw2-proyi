@@ -39,6 +39,7 @@ class AuthenticatedSessionController extends Controller
             $user = $request->user();
             return response()->json([
                 'message' => 'Login correcto',
+                'csrf_token' => csrf_token(),
                 'usuario' => [
                     'id_empleado' => $user->id_empleado,
                     'nombre' => $user->nombre,

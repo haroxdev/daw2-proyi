@@ -24,10 +24,38 @@ api.interceptors.request.use(config => {
     return config;
 });
 
-// interceptor para manejar errores de autenticación
+// actualiza el token csrf en la meta tag del dom
+const actualizarCsrfMeta = (token) => {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta) meta.setAttribute('content', token);
+};
+
+// interceptor para renovar el token csrf tras login
 api.interceptors.response.use(
-    response => response,
-    error => {
+    response => {
+        // si la respuesta trae un csrf_token nuevo, actualizarlo
+        if (response.data?.csrf_token) {
+            actualizarCsrfMeta(response.data.csrf_token);
+        }
+        return response;
+    },
+    async error => {
+        const original = error.config;
+
+        // csrf expirado: pide token nuevo y reintenta una vez
+        if (error.response?.status === 419 && !original._reintento) {
+            original._reintento = true;
+            try {
+                const { data } = await axios.get('/csrf-token', { withCredentials: true });
+                if (data.csrf_token) {
+                    actualizarCsrfMeta(data.csrf_token);
+                }
+                return api(original);
+            } catch {
+                window.location.reload();
+            }
+        }
+
         if (error.response?.status === 401) {
             window.location.href = '/login';
         }

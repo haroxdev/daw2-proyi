@@ -31,12 +31,16 @@ export function ProveedorAuth({ children, usuarioInicial = null }) {
     // verifica si es admin o responsable
     const esAdminOResponsable = () => tieneRol(['admin', 'responsable']);
 
+    // verifica si es admin exclusivamente
+    const esAdmin = () => tieneRol(['admin']);
+
     const valor = {
         usuario,
         setUsuario,
         cargando,
         tieneRol,
         esAdminOResponsable,
+        esAdmin,
         autenticado: !!usuario
     };
 
