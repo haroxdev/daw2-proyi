@@ -254,8 +254,22 @@ export const tiposAusencia = {
     crear: (datos) => 
         api.post('/tipos-ausencia', datos),
     
-    actualizar: (idTipo, datos) => 
-        api.put(`/tipos-ausencia/${idTipo}`, datos),
+    // usar method spoofing para compatibilidad con hosts que bloquean PUT
+    actualizar: (idTipo, datos) => {
+        const params = new URLSearchParams();
+        if (datos && typeof datos === 'object') {
+            Object.keys(datos).forEach(k => {
+                const v = datos[k];
+                if (Array.isArray(v)) {
+                    v.forEach(item => params.append(k + '[]', item));
+                } else if (v !== undefined && v !== null) {
+                    params.append(k, v);
+                }
+            });
+        }
+        params.append('_method', 'PUT');
+        return api.post(`/tipos-ausencia/${idTipo}`, params.toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+    },
     
     eliminar: (idTipo) => 
         api.delete(`/tipos-ausencia/${idTipo}`)
