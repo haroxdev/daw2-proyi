@@ -59,6 +59,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             window.location.href = '/login';
         }
+
         return Promise.reject(error);
     }
 );
@@ -227,8 +228,22 @@ export const departamentos = {
     crear: (datos) => 
         api.post('/departamentos', datos),
     
-    actualizar: (idDepartamento, datos) => 
-        api.put(`/departamentos/${idDepartamento}`, datos),
+    // method spoofing (_method=PUT) garantiza compatibilidad con Laravel.
+    actualizar: (idDepartamento, datos) => {
+        const params = new URLSearchParams();
+        if (datos && typeof datos === 'object') {
+            Object.keys(datos).forEach(k => {
+                const v = datos[k];
+                if (Array.isArray(v)) {
+                    v.forEach(item => params.append(k + '[]', item));
+                } else if (v !== undefined && v !== null) {
+                    params.append(k, v);
+                }
+            });
+        }
+        params.append('_method', 'PUT');
+        return api.post(`/departamentos/${idDepartamento}`, params.toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+    },
     
     eliminar: (idDepartamento) => 
         api.delete(`/departamentos/${idDepartamento}`)

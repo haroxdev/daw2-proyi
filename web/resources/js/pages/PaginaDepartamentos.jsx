@@ -51,7 +51,14 @@ export default function PaginaDepartamentos() {
             setFormulario({ nombre: '', descripcion: '' });
             await cargarDatos();
         } catch (error) {
-            setMensaje({ tipo: 'error', texto: error.response?.data?.message || 'Error al crear departamento' });
+            // mostrar errores de validación si los hay
+            const errores = error.response?.data?.errors;
+            if (errores) {
+                const primero = Object.values(errores)[0];
+                setMensaje({ tipo: 'error', texto: Array.isArray(primero) ? primero[0] : String(primero) });
+            } else {
+                setMensaje({ tipo: 'error', texto: error.response?.data?.message || 'Error al crear departamento' });
+            }
         } finally {
             setCargando(false);
         }
@@ -65,7 +72,13 @@ export default function PaginaDepartamentos() {
             setMensaje({ tipo: 'exito', texto: 'Departamento actualizado' });
             await cargarDatos();
         } catch (error) {
-            setMensaje({ tipo: 'error', texto: 'Error al actualizar departamento' });
+            const errores = error.response?.data?.errors;
+            if (errores) {
+                const primero = Object.values(errores)[0];
+                setMensaje({ tipo: 'error', texto: Array.isArray(primero) ? primero[0] : String(primero) });
+            } else {
+                setMensaje({ tipo: 'error', texto: error.response?.data?.message || 'Error al actualizar departamento' });
+            }
         } finally {
             setCargando(false);
         }
