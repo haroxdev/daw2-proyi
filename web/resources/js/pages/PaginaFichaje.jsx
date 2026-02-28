@@ -87,6 +87,9 @@ export default function PaginaFichaje() {
         return () => clearInterval(intervalo);
     }, [registroAbierto]);
 
+    // mes actual para título y nombre de archivo
+    const mesActual = horaActual.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+
     // calcular pausas totales
     const calcularPausas = (pausas) => {
         if (!pausas || pausas.length === 0) return '00:00';
@@ -101,6 +104,33 @@ export default function PaginaFichaje() {
         const h = Math.floor(totalMinutos / 60);
         const m = Math.floor(totalMinutos % 60);
         return h > 0 ? `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}` : `00:${m.toString().padStart(2, '0')}`;
+    };
+
+    // exporta registros del mes a csv
+    const exportarCSV = () => {
+        if (registros.length === 0) return;
+
+        const cabecera = 'Fecha,Entrada,Salida,Pausas,Total,Estado';
+        const filas = registros.map(r => {
+            const estado = !r.hora_salida ? 'En curso' : r.corregido ? 'Corregido' : 'Completado';
+            return [
+                formatearFechaCorta(r.hora_llegada),
+                formatearHora(r.hora_llegada),
+                formatearHora(r.hora_salida) || '',
+                calcularPausas(r.pausas),
+                calcularTiempoTrabajado(r.hora_llegada, r.hora_salida, r.pausas),
+                estado,
+            ].join(',');
+        });
+
+        const contenido = '\uFEFF' + [cabecera, ...filas].join('\n');
+        const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = `fichajes_${mesActual.replace(/\s+/g, '_')}.csv`;
+        enlace.click();
+        URL.revokeObjectURL(url);
     };
 
     // manejar fichaje entrada
@@ -190,9 +220,6 @@ export default function PaginaFichaje() {
 
     // paginación del historial
     const { itemsPaginados: registrosPaginados, paginaActual, totalPaginas, setPaginaActual } = usePaginacion(registros, 5);
-
-    // obtener mes actual para título
-    const mesActual = horaActual.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
 
     return (
         <div className="space-y-6">
@@ -294,7 +321,11 @@ export default function PaginaFichaje() {
                             <IconoCorreccion />
                             Solicitar Corrección
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
+                        <button
+                            onClick={exportarCSV}
+                            disabled={registros.length === 0}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                        >
                             <IconoExportar />
                             Exportar
                         </button>
