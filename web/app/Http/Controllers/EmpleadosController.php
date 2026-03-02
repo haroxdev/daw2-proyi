@@ -56,8 +56,15 @@ class EmpleadosController extends Controller
     // desactiva un empleado cambiando su estado a baja
     public function desactivar(Empleado $empleado)
     {
-        if ($empleado->id_empleado === request()->user()->id_empleado) {
+        $usuario = request()->user();
+
+        if ($empleado->id_empleado === $usuario->id_empleado) {
             return response()->json(['error' => 'No puedes desactivarte a ti mismo'], 422);
+        }
+
+        // responsable no puede desactivar admin/responsable
+        if (!$usuario->hasRole('admin') && $empleado->hasRole(['admin', 'responsable'])) {
+            return response()->json(['error' => 'No tienes permiso para desactivar este usuario'], 403);
         }
 
         $empleado->update(['estado' => 'baja']);

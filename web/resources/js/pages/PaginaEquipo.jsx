@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, Modal, etiquetaEstado, Paginador, usePaginacion } from '../components';
 import { empleados, datosPagina } from '../services/api';
+import { useAuth } from '../context/ContextoAuth';
 
 // estado inicial del formulario de creación
 const formularioVacio = {
@@ -25,6 +26,15 @@ export default function PaginaEquipo() {
     const [modalEditar, setModalEditar] = useState(false);
     const [empleadoEditando, setEmpleadoEditando] = useState(null);
     const [formEditar, setFormEditar] = useState({});
+
+    const { esAdmin } = useAuth();
+
+    // responsable no puede editar usuarios con rol admin o responsable
+    const puedeEditar = (emp) => {
+        if (esAdmin()) return true;
+        const rolesProtegidos = ['admin', 'responsable'];
+        return !emp.roles?.some(r => rolesProtegidos.includes(r.nombre));
+    };
 
     // paginación
     const { itemsPaginados: empleadosPaginados, paginaActual, totalPaginas, setPaginaActual } = usePaginacion(listaEmpleados, 5);
@@ -291,13 +301,15 @@ export default function PaginaEquipo() {
                                                 </div>
                                             </CeldaTabla>
                                             <CeldaTabla>
-                                                <Boton
-                                                    tamano="pequeno"
-                                                    variante="contornoPrimario"
-                                                    onClick={() => abrirEditar(emp)}
-                                                >
-                                                    Editar
-                                                </Boton>
+                                                {puedeEditar(emp) && (
+                                                    <Boton
+                                                        tamano="pequeno"
+                                                        variante="contornoPrimario"
+                                                        onClick={() => abrirEditar(emp)}
+                                                    >
+                                                        Editar
+                                                    </Boton>
+                                                )}
                                             </CeldaTabla>
                                         </FilaTabla>
                                     ))

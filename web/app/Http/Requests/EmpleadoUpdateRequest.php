@@ -9,7 +9,19 @@ class EmpleadoUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasRole(['admin', 'responsable']) ?? false;
+        $usuario = $this->user();
+        if (!$usuario) return false;
+
+        // admin puede editar a cualquiera
+        if ($usuario->hasRole('admin')) return true;
+
+        // responsable solo puede editar empleados sin rol admin/responsable
+        if ($usuario->hasRole('responsable')) {
+            $objetivo = $this->route('empleado');
+            return !$objetivo->hasRole(['admin', 'responsable']);
+        }
+
+        return false;
     }
 
     public function rules(): array
