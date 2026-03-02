@@ -84,7 +84,7 @@ class ExportacionController extends Controller
             ['Proyecto', 'Tarea', 'Empleado', 'Fecha', 'Inicio', 'Fin', 'Horas'],
             $tiempos->map(function ($t) {
                 $horas = $t->inicio && $t->fin
-                    ? round($t->fin->diffInMinutes($t->inicio) / 60, 2)
+                    ? round($t->inicio->diffInMinutes($t->fin) / 60, 2)
                     : 0;
 
                 return [
