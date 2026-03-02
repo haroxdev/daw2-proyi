@@ -17,7 +17,7 @@ class EmpleadosController extends Controller
     public function crear(EmpleadoStoreRequest $request)
     {
         $data = $request->validated();
-        $roles = $data['roles'] ?? [];
+        $roles = $this->filtrarRolesPermitidos($request->user(), $data['roles'] ?? []);
         unset($data['roles']);
 
         $empleado = DB::transaction(function () use ($data, $roles) {
@@ -36,7 +36,7 @@ class EmpleadosController extends Controller
     public function actualizar(EmpleadoUpdateRequest $request, Empleado $empleado)
     {
         $data = $request->validated();
-        $roles = $data['roles'] ?? [];
+        $roles = $this->filtrarRolesPermitidos($request->user(), $data['roles'] ?? []);
         unset($data['roles']);
 
         if (empty($data['contrasena'])) {
@@ -71,5 +71,19 @@ class EmpleadosController extends Controller
         $this->auditoria->registrar(request()->user(), 'empleado_desactivado', 'empleado', $empleado->id_empleado);
 
         return response()->json(['message' => 'Empleado desactivado']);
+    }
+
+    // responsable solo puede asignar el rol empleado;
+    // admin puede asignar cualquier rol
+    private function filtrarRolesPermitidos(Empleado $usuario, array $roles): array
+    {
+        if ($usuario->hasRole('admin')) return $roles;
+
+        $idsProtegidos = DB::table('rol')
+            ->whereIn('nombre', ['admin', 'responsable'])
+            ->pluck('id_rol')
+            ->toArray();
+
+        return array_values(array_filter($roles, fn ($id) => !in_array((int) $id, $idsProtegidos, true)));
     }
 }

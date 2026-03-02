@@ -36,6 +36,11 @@ export default function PaginaEquipo() {
         return !emp.roles?.some(r => rolesProtegidos.includes(r.nombre));
     };
 
+    // roles que el usuario actual puede asignar
+    const rolesAsignables = esAdmin()
+        ? roles
+        : roles.filter(r => !['admin', 'responsable'].includes(r.nombre));
+
     // paginación
     const { itemsPaginados: empleadosPaginados, paginaActual, totalPaginas, setPaginaActual } = usePaginacion(listaEmpleados, 5);
 
@@ -243,7 +248,7 @@ export default function PaginaEquipo() {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Roles</label>
                             <div className="flex flex-wrap gap-3">
-                                {roles.map(rol => (
+                                {rolesAsignables.map(rol => (
                                     <label key={rol.id_rol} className="flex items-center gap-2 text-gray-700">
                                         <input
                                             type="checkbox"
@@ -424,7 +429,7 @@ export default function PaginaEquipo() {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Roles</label>
                             <div className="flex flex-wrap gap-3">
-                                {roles.map(rol => (
+                                {rolesAsignables.map(rol => (
                                     <label key={rol.id_rol} className="flex items-center gap-2 text-gray-700">
                                         <input
                                             type="checkbox"
