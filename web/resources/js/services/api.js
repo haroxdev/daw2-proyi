@@ -15,12 +15,25 @@ const api = axios.create({
     withCredentials: true
 });
 
-// interceptor para añadir token csrf
+// interceptor para añadir token csrf y aplicar method spoofing
+// algunos hosts/proxy (cloudflare, etc.) bloquean PUT/DELETE;
+// se reescribe como POST + _method para compatibilidad con laravel
 api.interceptors.request.use(config => {
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     if (token) {
         config.headers['X-CSRF-TOKEN'] = token;
     }
+
+    const metodo = (config.method || '').toUpperCase();
+    if (metodo === 'PUT' || metodo === 'DELETE') {
+        config.method = 'post';
+        if (config.data && typeof config.data === 'object') {
+            config.data = { ...config.data, _method: metodo };
+        } else {
+            config.data = { _method: metodo };
+        }
+    }
+
     return config;
 });
 
@@ -228,22 +241,8 @@ export const departamentos = {
     crear: (datos) => 
         api.post('/departamentos', datos),
     
-    // method spoofing (_method=PUT) garantiza compatibilidad con Laravel.
-    actualizar: (idDepartamento, datos) => {
-        const params = new URLSearchParams();
-        if (datos && typeof datos === 'object') {
-            Object.keys(datos).forEach(k => {
-                const v = datos[k];
-                if (Array.isArray(v)) {
-                    v.forEach(item => params.append(k + '[]', item));
-                } else if (v !== undefined && v !== null) {
-                    params.append(k, v);
-                }
-            });
-        }
-        params.append('_method', 'PUT');
-        return api.post(`/departamentos/${idDepartamento}`, params.toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-    },
+    actualizar: (idDepartamento, datos) => 
+        api.put(`/departamentos/${idDepartamento}`, datos),
     
     eliminar: (idDepartamento) => 
         api.delete(`/departamentos/${idDepartamento}`)
@@ -254,22 +253,8 @@ export const tiposAusencia = {
     crear: (datos) => 
         api.post('/tipos-ausencia', datos),
     
-    // usar method spoofing para compatibilidad con hosts que bloquean PUT
-    actualizar: (idTipo, datos) => {
-        const params = new URLSearchParams();
-        if (datos && typeof datos === 'object') {
-            Object.keys(datos).forEach(k => {
-                const v = datos[k];
-                if (Array.isArray(v)) {
-                    v.forEach(item => params.append(k + '[]', item));
-                } else if (v !== undefined && v !== null) {
-                    params.append(k, v);
-                }
-            });
-        }
-        params.append('_method', 'PUT');
-        return api.post(`/tipos-ausencia/${idTipo}`, params.toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-    },
+    actualizar: (idTipo, datos) => 
+        api.put(`/tipos-ausencia/${idTipo}`, datos),
     
     eliminar: (idTipo) => 
         api.delete(`/tipos-ausencia/${idTipo}`)
