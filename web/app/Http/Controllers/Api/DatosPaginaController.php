@@ -19,6 +19,7 @@ use App\Models\Festivo;
 use App\Services\ReportingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 // controlador api que devuelve datos json para cada página de la spa
@@ -293,13 +294,22 @@ class DatosPaginaController extends Controller
         ]);
     }
 
-    // datos de proyectos (admin)
+    // datos de proyectos (filtrados por rol)
     public function proyectos(): JsonResponse
     {
-        $proyectos = Proyecto::with(['empleados', 'tareas.empleado'])
-            ->withCount('tareas')
-            ->get();
-        $empleados = Empleado::orderBy('nombre')->get();
+        $usuario = Auth::user();
+        $esGestor = $usuario->hasRole(['admin', 'responsable']);
+
+        $query = Proyecto::with(['empleados', 'tareas.empleado'])
+            ->withCount('tareas');
+
+        // empleados solo ven sus proyectos asignados
+        if (!$esGestor) {
+            $query->whereHas('empleados', fn ($q) => $q->where('empleado.id_empleado', $usuario->id_empleado));
+        }
+
+        $proyectos = $query->get();
+        $empleados = $esGestor ? Empleado::orderBy('nombre')->get() : collect();
 
         return response()->json([
             'proyectos' => $proyectos,
@@ -307,12 +317,22 @@ class DatosPaginaController extends Controller
         ]);
     }
 
-    // datos de tareas (admin)
+    // datos de tareas (filtradas por rol)
     public function tareas(): JsonResponse
     {
-        $tareas = Tarea::with(['proyecto', 'empleados', 'tiempos'])->get();
-        $proyectos = Proyecto::orderBy('nombre')->get();
-        $empleados = Empleado::orderBy('nombre')->get();
+        $usuario = Auth::user();
+        $esGestor = $usuario->hasRole(['admin', 'responsable']);
+
+        $query = Tarea::with(['proyecto', 'empleados', 'tiempos']);
+
+        // empleados solo ven tareas de sus proyectos asignados
+        if (!$esGestor) {
+            $query->whereHas('proyecto.empleados', fn ($q) => $q->where('empleado.id_empleado', $usuario->id_empleado));
+        }
+
+        $tareas = $query->get();
+        $proyectos = $esGestor ? Proyecto::orderBy('nombre')->get() : collect();
+        $empleados = $esGestor ? Empleado::orderBy('nombre')->get() : collect();
 
         return response()->json([
             'tareas' => $tareas,

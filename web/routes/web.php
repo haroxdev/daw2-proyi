@@ -77,6 +77,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/notificaciones', [DatosPaginaController::class, 'notificaciones']);
         Route::get('/contadores', [DatosPaginaController::class, 'contadores']);
         Route::get('/perfil', [PerfilController::class, 'mostrar']);
+        Route::get('/proyectos', [DatosPaginaController::class, 'proyectos']);
+        Route::get('/tareas', [DatosPaginaController::class, 'tareas']);
     });
 
     // --- fichaje ---
@@ -126,8 +128,6 @@ Route::middleware(['auth', 'role:admin,responsable'])->group(function () {
 
     // api de lectura
     Route::prefix('api/datos')->group(function () {
-        Route::get('/proyectos', [DatosPaginaController::class, 'proyectos']);
-        Route::get('/tareas', [DatosPaginaController::class, 'tareas']);
         Route::get('/equipo', [DatosPaginaController::class, 'equipo']);
         Route::get('/revisiones', [DatosPaginaController::class, 'revisiones']);
         Route::get('/reporting', [DatosPaginaController::class, 'reporting']);
