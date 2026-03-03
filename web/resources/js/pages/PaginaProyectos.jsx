@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, Modal, etiquetaEstado, Paginador, usePaginacion, BuscadorEmpleados, nombreCompleto } from '../components';
 import { proyectos, tareas, datosPagina } from '../services/api';
 import { formatearFechaMesCorto as formatearFecha } from '../utils';
+import { useAuth } from '../context/ContextoAuth';
 
 // formulario vacío por defecto
 const formularioVacio = { nombre: '', descripcion: '', fecha_inicio: '', fecha_fin: '', estado: 'activo' };
@@ -28,6 +29,9 @@ export default function PaginaProyectos() {
 
     // filtro de estado
     const [filtroEstado, setFiltroEstado] = useState('todos');
+
+    const { esAdminOResponsable } = useAuth();
+    const esGestor = esAdminOResponsable();
 
     const cargarDatos = async () => {
         try {
@@ -291,9 +295,11 @@ export default function PaginaProyectos() {
                             </button>
                         ))}
                     </div>
-                    <Boton onClick={() => { setFormulario({ ...formularioVacio }); setModalCrear(true); }}>
-                        + Nuevo proyecto
-                    </Boton>
+                    {esGestor && (
+                        <Boton onClick={() => { setFormulario({ ...formularioVacio }); setModalCrear(true); }}>
+                            + Nuevo proyecto
+                        </Boton>
+                    )}
                 </div>
             </div>
 
@@ -375,12 +381,16 @@ export default function PaginaProyectos() {
                                     <Boton tamano="pequeno" variante="contorno" onClick={() => abrirDetalle(proyecto)}>
                                         Ver
                                     </Boton>
-                                    <Boton tamano="pequeno" variante="contorno" onClick={() => abrirEdicion(proyecto)}>
-                                        Editar
-                                    </Boton>
-                                    <Boton tamano="pequeno" variante="peligro" onClick={() => abrirEliminar(proyecto)}>
-                                        Eliminar
-                                    </Boton>
+                                    {esGestor && (
+                                        <>
+                                            <Boton tamano="pequeno" variante="contorno" onClick={() => abrirEdicion(proyecto)}>
+                                                Editar
+                                            </Boton>
+                                            <Boton tamano="pequeno" variante="peligro" onClick={() => abrirEliminar(proyecto)}>
+                                                Eliminar
+                                            </Boton>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -394,11 +404,13 @@ export default function PaginaProyectos() {
                         </svg>
                         <h3 className="mt-3 text-sm font-medium text-gray-900">Sin proyectos</h3>
                         <p className="mt-1 text-sm text-gray-500">Crea tu primer proyecto para empezar.</p>
-                        <div className="mt-4">
-                            <Boton onClick={() => { setFormulario({ ...formularioVacio }); setModalCrear(true); }}>
-                                + Nuevo proyecto
-                            </Boton>
-                        </div>
+                        {esGestor && (
+                            <div className="mt-4">
+                                <Boton onClick={() => { setFormulario({ ...formularioVacio }); setModalCrear(true); }}>
+                                    + Nuevo proyecto
+                                </Boton>
+                            </div>
+                        )}
                     </div>
                 </Tarjeta>
             )}
@@ -411,6 +423,7 @@ export default function PaginaProyectos() {
             />
 
             {/* modal crear proyecto */}
+            {esGestor && (
             <Modal abierto={modalCrear} onCerrar={() => setModalCrear(false)} titulo="Nuevo proyecto">
                 <form onSubmit={crearProyecto} className="space-y-4">
                     <CampoFormulario etiqueta="Nombre" tipo="text" nombre="nombre" valor={formulario.nombre} onChange={manejarCambio} requerido />
@@ -426,8 +439,10 @@ export default function PaginaProyectos() {
                     </div>
                 </form>
             </Modal>
+            )}
 
             {/* modal editar proyecto */}
+            {esGestor && (
             <Modal abierto={modalEditar} onCerrar={() => setModalEditar(false)} titulo="Editar proyecto">
                 <form onSubmit={editarProyecto} className="space-y-4">
                     <CampoFormulario etiqueta="Nombre" tipo="text" nombre="nombre" valor={formulario.nombre} onChange={manejarCambio} requerido />
@@ -443,8 +458,10 @@ export default function PaginaProyectos() {
                     </div>
                 </form>
             </Modal>
+            )}
 
             {/* modal confirmar eliminación */}
+            {esGestor && (
             <Modal abierto={modalEliminar} onCerrar={() => setModalEliminar(false)} titulo="Eliminar proyecto">
                 <div className="space-y-4">
                     <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
@@ -462,6 +479,7 @@ export default function PaginaProyectos() {
                     </div>
                 </div>
             </Modal>
+            )}
 
             {/* modal detalle del proyecto */}
             <Modal abierto={modalDetalle} onCerrar={() => setModalDetalle(false)} titulo={proyectoSeleccionado?.nombre || ''} anchura="extragrande">
@@ -492,6 +510,7 @@ export default function PaginaProyectos() {
                         )}
 
                         {/* cambio de estado rápido */}
+                        {esGestor && (
                         <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-500">Cambiar estado:</span>
                             {opcionesEstado.map(op => (
@@ -506,6 +525,7 @@ export default function PaginaProyectos() {
                                 </Boton>
                             ))}
                         </div>
+                        )}
 
                         {/* equipo */}
                         <div>
@@ -529,6 +549,8 @@ export default function PaginaProyectos() {
                                                 onClick={() => desasignarEmpleado(proyectoSeleccionado.id_proyecto, emp.id_empleado)}
                                                 className="text-gray-400 hover:text-red-600 transition-colors ml-1"
                                                 title="Quitar del proyecto"
+                                                disabled={!esGestor}
+                                                style={!esGestor ? { display: 'none' } : {}}
                                             >
                                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -540,7 +562,7 @@ export default function PaginaProyectos() {
                             )}
 
                             {/* buscador para añadir empleado */}
-                            {empleadosDisponibles.length > 0 && (
+                            {esGestor && empleadosDisponibles.length > 0 && (
                                 <BuscadorEmpleados
                                     empleados={empleadosDisponibles}
                                     onSeleccionar={(emp) => asignarEmpleado(proyectoSeleccionado.id_proyecto, emp.id_empleado)}
@@ -554,7 +576,7 @@ export default function PaginaProyectos() {
                         <div>
                             <div className="flex items-center justify-between mb-3">
                                 <h4 className="font-semibold text-gray-900">Tareas ({proyectoSeleccionado.tareas?.length || 0})</h4>
-                                <Boton tamano="pequeno" onClick={abrirCrearTarea}>+ Tarea</Boton>
+                                {esGestor && <Boton tamano="pequeno" onClick={abrirCrearTarea}>+ Tarea</Boton>}
                             </div>
 
                             {proyectoSeleccionado.tareas?.length > 0 ? (
@@ -575,6 +597,7 @@ export default function PaginaProyectos() {
                                             <div className="flex items-center gap-2 shrink-0">
                                                 {etiquetaEstado(tarea.prioridad)}
                                                 {etiquetaEstado(tarea.estado || 'pendiente')}
+                                                {esGestor && (
                                                 <button
                                                     onClick={() => eliminarTarea(tarea.id_tarea)}
                                                     className="text-gray-400 hover:text-red-600 transition-colors p-1"
@@ -584,6 +607,7 @@ export default function PaginaProyectos() {
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                     </svg>
                                                 </button>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
