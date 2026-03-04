@@ -2,9 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Tarjeta, Boton, CampoFormulario, Tabla, EncabezadoTabla, CeldaEncabezado, CuerpoTabla, FilaTabla, CeldaTabla, TablaVacia, Alerta, Modal, etiquetaEstado, Paginador, usePaginacion, BuscadorEmpleados } from '../components';
 import { tareas, datosPagina } from '../services/api';
+import { useAuth } from '../context/ContextoAuth';
 import { calcularHorasTotales, formatearDuracion, formatearFecha, formatearHora } from '../utils';
 
 export default function PaginaTareas() {
+    const { esAdminOResponsable } = useAuth();
+    const esGestor = esAdminOResponsable();
+
     const [listaTareas, setListaTareas] = useState([]);
     const [proyectos, setProyectos] = useState([]);
     const [empleados, setEmpleados] = useState([]);
@@ -281,9 +285,9 @@ export default function PaginaTareas() {
                 />
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* formulario de creación */}
-                <Tarjeta titulo="Nueva tarea">
+            <div className={`grid grid-cols-1 ${esGestor ? 'lg:grid-cols-3' : ''} gap-6`}>
+                {/* formulario de creación (solo gestores) */}
+                {esGestor && <Tarjeta titulo="Nueva tarea">
                     <form onSubmit={manejarCrear} className="space-y-4">
                         <CampoFormulario
                             etiqueta="Proyecto"
@@ -342,10 +346,10 @@ export default function PaginaTareas() {
                             Crear tarea
                         </Boton>
                     </form>
-                </Tarjeta>
+                </Tarjeta>}
 
                 {/* listado de tareas */}
-                <div className="lg:col-span-2">
+                <div className={esGestor ? 'lg:col-span-2' : ''}>
                     <Tarjeta titulo="Tareas">
                         <Tabla>
                             <EncabezadoTabla>
@@ -431,7 +435,8 @@ export default function PaginaTareas() {
                                                         >
                                                             + Imputar
                                                         </Boton>
-                                                        {/* asignación */}
+                                                        {/* gestión (solo gestores) */}
+                                                        {esGestor && (<>
                                                         <Boton
                                                             tamano="pequeno"
                                                             variante="contorno"
@@ -440,7 +445,6 @@ export default function PaginaTareas() {
                                                         >
                                                             Asignar
                                                         </Boton>
-                                                        {/* edición */}
                                                         <Boton
                                                             tamano="pequeno"
                                                             variante="contornoPrimario"
@@ -457,6 +461,7 @@ export default function PaginaTareas() {
                                                         >
                                                             Eliminar
                                                         </Boton>
+                                                        </>)}
                                                     </div>
                                                 </CeldaTabla>
                                             </FilaTabla>
@@ -590,7 +595,8 @@ export default function PaginaTareas() {
                 </form>
             </Modal>
 
-            {/* modal asignación múltiple */}
+            {/* modales de gestión (solo gestores) */}
+            {esGestor && <>
             <Modal
                 abierto={modalAsignar}
                 onCerrar={() => setModalAsignar(false)}
@@ -684,6 +690,7 @@ export default function PaginaTareas() {
                     </form>
                 )}
             </Modal>
+            </>}
         </div>
     );
 }
